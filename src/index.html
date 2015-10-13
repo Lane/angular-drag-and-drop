@@ -73,12 +73,14 @@
       }
       .drop-hovering .drop-content {
         border-color:#0c3;
+        background: #dfd;
       }
       .drop-full {
-        background: #fed;
+        background: #fee;
       }
       .drop-hovering .drop-full {
         border-color:#f30;
+        background:#fdd;
       }
       .drop-one p {
         position:absolute;
@@ -104,7 +106,8 @@
             on-drag-start="logThis('started dragging', draggable)"
             on-drag-end="logThis('done dragging', draggable, droppable)"
             on-drag-enter="logThis('dragged over drop spot', draggable, droppable)"
-            on-drag-leave="logThis('dragged out of drop spot', draggable, droppable)">
+            on-drag-leave="logThis('dragged out of drop spot', draggable, droppable)"
+            enable-swap="true">
 
             <drag-item class="drag-item" drag-id="item-one" drop-to="top left">
                 <p>Item One</p>
@@ -122,7 +125,7 @@
                 <p>Item Four</p>
             </drag-item>
 
-            <drop-spot max-items="2" class="drop-spot" drop-id="drop-one">
+            <drop-spot max-items="3" class="drop-spot" drop-id="drop-one">
               <p>Drop Here</p>
             </drop-spot>
 

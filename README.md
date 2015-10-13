@@ -37,11 +37,14 @@ The following callback functions can be added to the `drag-and-drop` directive.
   - `on-drag-leave`: fired when an item is dragged outside of a drop spot
   - `on-item-placed`: fired when an item is dropped inside of a drop spot
   - `on-item-removed`: fired when and item is removed from its drop spot
+  - `enable-swap`: when set to true, an item will be swapped out when dropping a drag item on to a drop spot that has reached its maximum number of items
 
 #### `drag-item`
   - `drag-id`: an identifier that is used for this drag item.  When set, the `drag-item` element will have a class that matches the `drag-id`.
   - `drag-data`: use to associate any additional data you may want for the draggable item.
   - `drop-to`: used to position the element within the drop spot.
+  - `x`: the x offset of the drag item
+  - `y`: the y offset of the drag item
 
 #### `drop-spot`
   - `drop-id`: an identifier that is used for this drop item.  When set, the `drop-spot` element will have a class that matches the `drag-id`.

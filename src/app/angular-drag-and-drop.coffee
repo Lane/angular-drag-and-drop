@@ -12,6 +12,7 @@ module.directive 'dragAndDrop', ->
     onDragEnd: "&"
     onDragEnter: "&"
     onDragLeave: "&"
+    enableSwap: "="
   require: 'dragAndDrop'
   transclude: true
   template: "<div class='drag-container' ng-class='{dragging: isDragging}' " +
@@ -104,6 +105,7 @@ module.directive 'dragAndDrop', ->
     moveEvents = "touchmove mousemove"
     releaseEvents = "touchend mouseup"
 
+
     bindEvents = () ->
       element.on moveEvents, onMove
       element.on releaseEvents, onRelease
@@ -126,6 +128,13 @@ module.directive 'dragAndDrop', ->
         draggable.deactivate()
         if dropSpot and not dropSpot.isFull
           # add the draggable to the drop spot if it isn't full
+          ngDragAndDrop.fireCallback 'item-assigned'
+          draggable.assignTo dropSpot
+          dropSpot.itemDropped draggable
+        else if dropSpot and dropSpot.isFull and scope.enableSwap
+          # swap
+          dropSpot.items[0].returnToStartPosition()
+          dropSpot.items[0].removeFrom dropSpot
           ngDragAndDrop.fireCallback 'item-assigned'
           draggable.assignTo dropSpot
           dropSpot.itemDropped draggable
@@ -162,6 +171,8 @@ module.directive 'dragItem', ($window) ->
     "<div class='drag-content' ng-class='{dropped: isAssigned}'" +
     " ng-transclude></div></div>"
   scope:
+    x: "@"
+    y: "@"
     dropTo: "@"
     dragId: "@"
     dragData: "="
@@ -174,11 +185,14 @@ module.directive 'dragItem', ($window) ->
     width = element[0].offsetWidth
     height = element[0].offsetHeight
 
-    scope.x = scope.y = 0
+    unless scope.x
+      scope.x = 0
+    unless scope.y
+      scope.y = 0
 
     scope.dropSpots = []
     scope.isAssigned = false
-    scope.startPosition = [scope.left, scope.top]
+    startPosition = [scope.x, scope.y]
 
     updateDimensions = () ->
       scope.left = scope.x + element[0].offsetLeft
@@ -201,11 +215,12 @@ module.directive 'dragItem', ($window) ->
           transform: "translate(#{scope.x}px, #{scope.y}px)"
 
     scope.returnToStartPosition = ->
-      scope.x = scope.y = 0
+      scope.x = startPosition[0]
+      scope.y = startPosition[1]
       updateDimensions()
       scope.$evalAsync ->
         scope.dragStyle =
-          transform: "translate(0px, 0px)"
+          transform: "translate(#{scope.x}px, #{scope.y}px)"
 
     scope.assignTo = (dropSpot) ->
       scope.dropSpots.push dropSpot
@@ -231,13 +246,11 @@ module.directive 'dragItem', ($window) ->
       scope.isDragging = false
 
     bindEvents = () ->
-      pressEvents = "touchstart mousedown"
       element.on pressEvents, onPress
       w.bind "resize", updateDimensions
 
     unbindEvents = () ->
       element.off pressEvents, onPress
-      element.off releaseEvents, onRelease
       w.unbind "resize", updateDimensions
 
     onPress = (e) ->
@@ -258,6 +271,7 @@ module.directive 'dragItem', ($window) ->
         ngDragAndDrop.fireCallback 'item-removed'
 
     # initialization
+    pressEvents = "touchstart mousedown"
     w = angular.element $window
     updateDimensions()
     ngDragAndDrop.addDraggable scope
@@ -278,7 +292,7 @@ module.directive 'dropSpot', ($window) ->
     "ng-transclude></div>"
   scope:
     dropId: "@"
-    maxItems: "@"
+    maxItems: "="
   link: (scope, element, attrs, ngDragAndDrop) ->
 
     updateDimensions = ->
@@ -340,6 +354,7 @@ module.directive 'dropSpot', ($window) ->
         item.returnToStartPosition()
 
     addItem = (item) ->
+      console.log "ADDING ITEM", scope.isFull, scope.items.length, scope.maxItems
       unless scope.isFull
         scope.items.push item
         if scope.items.length >= scope.maxItems

@@ -12,7 +12,8 @@ module.directive('dragAndDrop', function() {
       onDragStart: "&",
       onDragEnd: "&",
       onDragEnter: "&",
-      onDragLeave: "&"
+      onDragLeave: "&",
+      enableSwap: "="
     },
     require: 'dragAndDrop',
     transclude: true,
@@ -134,6 +135,12 @@ module.directive('dragAndDrop', function() {
             ngDragAndDrop.fireCallback('item-assigned');
             draggable.assignTo(dropSpot);
             dropSpot.itemDropped(draggable);
+          } else if (dropSpot && dropSpot.isFull && scope.enableSwap) {
+            dropSpot.items[0].returnToStartPosition();
+            dropSpot.items[0].removeFrom(dropSpot);
+            ngDragAndDrop.fireCallback('item-assigned');
+            draggable.assignTo(dropSpot);
+            dropSpot.itemDropped(draggable);
           } else {
             draggable.isAssigned = false;
             draggable.returnToStartPosition();
@@ -169,22 +176,29 @@ module.directive('dragItem', function($window) {
     transclude: true,
     template: "<div class='drag-transform' " + "ng-class='{\"drag-active\": isDragging}' ng-style='dragStyle'>" + "<div class='drag-content' ng-class='{dropped: isAssigned}'" + " ng-transclude></div></div>",
     scope: {
+      x: "@",
+      y: "@",
       dropTo: "@",
       dragId: "@",
       dragData: "="
     },
     link: function(scope, element, attrs, ngDragAndDrop) {
-      var bindEvents, eventOffset, height, onPress, unbindEvents, updateDimensions, w, width;
+      var bindEvents, eventOffset, height, onPress, pressEvents, startPosition, unbindEvents, updateDimensions, w, width;
       if (scope.dragId) {
         element.addClass(scope.dragId);
       }
       eventOffset = [0, 0];
       width = element[0].offsetWidth;
       height = element[0].offsetHeight;
-      scope.x = scope.y = 0;
+      if (!scope.x) {
+        scope.x = 0;
+      }
+      if (!scope.y) {
+        scope.y = 0;
+      }
       scope.dropSpots = [];
       scope.isAssigned = false;
-      scope.startPosition = [scope.left, scope.top];
+      startPosition = [scope.x, scope.y];
       updateDimensions = function() {
         scope.left = scope.x + element[0].offsetLeft;
         scope.right = scope.left + width;
@@ -203,11 +217,12 @@ module.directive('dragItem', function($window) {
         });
       };
       scope.returnToStartPosition = function() {
-        scope.x = scope.y = 0;
+        scope.x = startPosition[0];
+        scope.y = startPosition[1];
         updateDimensions();
         return scope.$evalAsync(function() {
           return scope.dragStyle = {
-            transform: "translate(0px, 0px)"
+            transform: "translate(" + scope.x + "px, " + scope.y + "px)"
           };
         });
       };
@@ -240,14 +255,11 @@ module.directive('dragItem', function($window) {
         return scope.isDragging = false;
       };
       bindEvents = function() {
-        var pressEvents;
-        pressEvents = "touchstart mousedown";
         element.on(pressEvents, onPress);
         return w.bind("resize", updateDimensions);
       };
       unbindEvents = function() {
         element.off(pressEvents, onPress);
-        element.off(releaseEvents, onRelease);
         return w.unbind("resize", updateDimensions);
       };
       onPress = function(e) {
@@ -267,6 +279,7 @@ module.directive('dragItem', function($window) {
           return ngDragAndDrop.fireCallback('item-removed');
         }
       };
+      pressEvents = "touchstart mousedown";
       w = angular.element($window);
       updateDimensions();
       ngDragAndDrop.addDraggable(scope);
@@ -287,7 +300,7 @@ module.directive('dropSpot', function($window) {
     template: "<div class='drop-content' ng-class='{ \"drop-full\": isFull }' " + "ng-transclude></div>",
     scope: {
       dropId: "@",
-      maxItems: "@"
+      maxItems: "="
     },
     link: function(scope, element, attrs, ngDragAndDrop) {
       var addItem, bindEvents, getDroppedPosition, unbindEvents, updateDimensions, w;
@@ -357,6 +370,7 @@ module.directive('dropSpot', function($window) {
         }
       };
       addItem = function(item) {
+        console.log("ADDING ITEM", scope.isFull, scope.items.length, scope.maxItems);
         if (!scope.isFull) {
           scope.items.push(item);
           if (scope.items.length >= scope.maxItems) {
