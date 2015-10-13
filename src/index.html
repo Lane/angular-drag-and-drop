@@ -8,6 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="./../build/css/drag-and-drop.css">
     <style>
+      html,body { margin:0;padding:0;width:100%;height:100%;font-family: Roboto, sans-serif;}
+      p { margin: 0; }
+
       .drag-container {
         background:#efe;
       }
@@ -77,8 +80,15 @@
       .drop-hovering .drop-full {
         border-color:#f30;
       }
-
-
+      .drop-one p {
+        position:absolute;
+        top:0; bottom:0; left:0; right:0;
+        height:24px;
+        margin:auto;
+        text-transform: uppercase;
+        color:#ccc;
+        text-align:center;
+      }
     </style>
   </head>
   <body>
@@ -89,31 +99,31 @@
       <div ng-app="example">
         <div ng-controller="ExampleController">
           <ng-drag-and-drop
-            on-drop="logThis('item dropped', draggable, droppable)"
+            on-item-placed="logThis('item assigned', draggable, droppable)"
+            on-item-removed="logThis('item removed', draggable, droppable)"
             on-drag-start="logThis('started dragging', draggable)"
-            on-drag-end="logThis('done dragging', draggable)">
+            on-drag-end="logThis('done dragging', draggable, droppable)"
+            on-drag-enter="logThis('dragged over drop spot', draggable, droppable)"
+            on-drag-leave="logThis('dragged out of drop spot', draggable, droppable)">
 
-            <ng-drag class="drag-item item-one" drop-to="top left">
+            <ng-drag class="drag-item" drag-id="item-one" drop-to="top left">
                 <p>Item One</p>
             </ng-drag>
 
-            <ng-drag class="drag-item item-two" drop-to="top right">
+            <ng-drag class="drag-item" drag-id="item-two" drop-to="top right">
                 <p>Item Two</p>
             </ng-drag>
 
-            <ng-drag class="drag-item item-three" drop-to="bottom left">
+            <ng-drag class="drag-item" drag-id="item-three" drop-to="bottom left">
                 <p>Item Three</p>
             </ng-drag>
 
-            <ng-drag class="drag-item item-four" drop-to="bottom right">
+            <ng-drag class="drag-item" drag-id="item-four" drop-to="bottom right">
                 <p>Item Four</p>
             </ng-drag>
 
-            <ng-drop
-               on-drag-enter="logThis('dragged over drop spot', draggable, droppable)"
-               on-drag-leave="logThis('dragged out of drop spot', draggable, droppable)"
-               max-items="2"
-               class="drop-spot drop-one">
+            <ng-drop max-items="2" class="drop-spot" drop-id="drop-one">
+              <p>Drop Here</p>
             </ng-drop>
 
           </ng-drag-and-drop>

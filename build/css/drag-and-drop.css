@@ -20,26 +20,28 @@ ng-drag:active {
   cursor: -webkit-grabbing;
   cursor: grabbing;
 }
-.drag-transform {
+ng-drag .drag-transform {
   -webkit-transition: -webkit-transform 0.25s ease-out;
           transition: transform 0.25s ease-out;
   -webkit-transform-origin: center center;
       -ms-transform-origin: center center;
           transform-origin: center center;
 }
-.drag-content {
+ng-drag .drag-transform.drag-active {
+  -webkit-transition: -webkit-transform 0.25s cubic-bezier(0, 0.5, 0, 1);
+          transition: transform 0.25s cubic-bezier(0, 0.5, 0, 1);
+}
+ng-drag .drag-content {
   -webkit-transform: scale(1);
       -ms-transform: scale(1);
           transform: scale(1);
   -webkit-transition: all 0.1s ease-in-out;
           transition: all 0.1s ease-in-out;
 }
-.drag-active {
+ng-drag .drag-active {
   z-index: 20;
-  -webkit-transition: none;
-          transition: none;
 }
-.drag-active .drag-content {
+ng-drag .drag-active .drag-content {
   -webkit-transform: scale(1.15);
       -ms-transform: scale(1.15);
           transform: scale(1.15);

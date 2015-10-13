@@ -1,12 +1,17 @@
-module = angular.module "onlea.ui.dragdrop", []
+module = angular.module "laneolson.ui.dragdrop", []
 
+# Drag and Drop Directive
+# ----------
 module.directive 'ngDragAndDrop', ->
   restrict: 'E'
   scope:
-    onDrop: "&"
+    onItemPlaced: "&"
+    onItemRemoved: "&"
     onDrag: "&"
     onDragStart: "&"
     onDragEnd: "&"
+    onDragEnter: "&"
+    onDragLeave: "&"
   require: 'ngDragAndDrop'
   transclude: true
   template: "<div class='drag-container' ng-class='{dragging: isDragging}' " +
@@ -38,17 +43,17 @@ module.directive 'ngDragAndDrop', ->
             if !dropSpot.isActive
               @setCurrentDroppable dropSpot
               dropSpot.activate()
+              @fireCallback 'drag-enter'
           else
             if dropSpot.isActive
               @setCurrentDroppable null
               dropSpot.deactivate()
+              @fireCallback 'drag-leave'
 
       @setCurrentDraggable = (draggable) ->
         $scope.currentDraggable = draggable
         if draggable
-          $scope.onDragStart?(
-            draggable: draggable
-          )
+          @fireCallback 'drag-start'
         $scope.$evalAsync ->
           $scope.currentDraggable = draggable
           if draggable
@@ -70,6 +75,26 @@ module.directive 'ngDragAndDrop', ->
 
       @addDraggable = (draggable) ->
         draggables.push draggable
+
+      @fireCallback = (type) ->
+        state =
+          draggable: @getCurrentDraggable()
+          droppable: @getCurrentDroppable()
+        switch type
+          when 'drag-end'
+            $scope.onDragEnd?(state)
+          when 'drag-start'
+            $scope.onDragStart?(state)
+          when 'drag'
+            $scope.onDrag?(state)
+          when 'item-assigned'
+            $scope.onItemPlaced?(state)
+          when 'item-removed'
+            $scope.onItemRemoved?(state)
+          when 'drag-leave'
+            $scope.onDragLeave?(state)
+          when 'drag-enter'
+            $scope.onDragEnter?(state)
 
       return
 
@@ -97,31 +122,26 @@ module.directive 'ngDragAndDrop', ->
 
       # deactivate the draggable
       if draggable
+        ngDragAndDrop.fireCallback 'drag-end'
         draggable.deactivate()
-        scope.onDragEnd?(
-          draggable: draggable
-        )
-        ngDragAndDrop.setCurrentDraggable null
-
-      # assign the draggable to the drop spot if there is one
-      if draggable and dropSpot
-        unless dropSpot.isFull
+        if dropSpot and not dropSpot.isFull
+          # add the draggable to the drop spot if it isn't full
+          ngDragAndDrop.fireCallback 'item-assigned'
           draggable.assignTo dropSpot
-        dropSpot.itemDropped draggable
-        dropSpot.deactivate()
-
-      # if released over nothing, remove the assignment
-      if draggable and not dropSpot
-        draggable.isAssigned = false
-        draggable.returnToStartPosition()
+          dropSpot.itemDropped draggable
+        else
+          # if released over nothing, remove the assignment
+          draggable.isAssigned = false
+          draggable.returnToStartPosition()
+        if dropSpot
+          dropSpot.deactivate()
+        ngDragAndDrop.setCurrentDraggable null
 
     onMove = (e) ->
       # if we're dragging, update the position
       draggable = ngDragAndDrop.getCurrentDraggable()
       if draggable
-        scope.onDrag?(
-          draggable:draggable
-        )
+        ngDragAndDrop.fireCallback 'drag'
         if e.touches and e.touches.length is 1
           draggable.updateOffset e.touches[0].clientX, e.touches[0].clientY
         else
@@ -130,9 +150,10 @@ module.directive 'ngDragAndDrop', ->
 
     bindEvents()
 
-# Drag
+
+# Drag Directive
 # ----------
-module.directive 'ngDrag', ->
+module.directive 'ngDrag', ($window) ->
   restrict: 'EA'
   require: '^ngDragAndDrop'
   transclude: true
@@ -142,7 +163,12 @@ module.directive 'ngDrag', ->
     " ng-transclude></div></div>"
   scope:
     dropTo: "@"
+    dragId: "@"
+    dragData: "="
   link: (scope, element, attrs, ngDragAndDrop) ->
+
+    if scope.dragId
+      element.addClass scope.dragId
 
     eventOffset = [0, 0]
     width = element[0].offsetWidth
@@ -184,10 +210,14 @@ module.directive 'ngDrag', ->
     scope.assignTo = (dropSpot) ->
       scope.dropSpots.push dropSpot
       scope.isAssigned = true
+      if dropSpot.dropId
+        element.addClass "in-#{dropSpot.dropId}"
 
     scope.removeFrom = (dropSpot) ->
       index = scope.dropSpots.indexOf dropSpot
       if index > -1
+        if dropSpot.dropId
+          element.removeClass "in-#{dropSpot.dropId}"
         scope.dropSpots.splice index, 1
         if scope.dropSpots.length < 1
           scope.isAssigned = false
@@ -203,10 +233,12 @@ module.directive 'ngDrag', ->
     bindEvents = () ->
       pressEvents = "touchstart mousedown"
       element.on pressEvents, onPress
+      w.bind "resize", updateDimensions
 
     unbindEvents = () ->
       element.off pressEvents, onPress
       element.off releaseEvents, onRelease
+      w.unbind "resize", updateDimensions
 
     onPress = (e) ->
       ngDragAndDrop.setCurrentDraggable scope
@@ -223,32 +255,37 @@ module.directive 'ngDrag', ->
       dropSpot = ngDragAndDrop.getCurrentDroppable()
       if dropSpot
         scope.removeFrom dropSpot
+        ngDragAndDrop.fireCallback 'item-removed'
 
+    # initialization
+    w = angular.element $window
     updateDimensions()
     ngDragAndDrop.addDraggable scope
     bindEvents()
     scope.returnToStartPosition()
 
-module.directive 'ngDrop', ->
+    scope.$on '$destroy', ->
+      unbindEvents()
+
+
+# Drop Directive
+# ----------
+module.directive 'ngDrop', ($window) ->
   restrict: 'AE'
   require: '^ngDragAndDrop'
   transclude: true
-  template: "<div class='drop-content' ng-class='{ \"drop-full\": isFull }' " +
+  template: "<div class='drop-content' ng-class='{ \"drop-full\": isFull }' "+
     "ng-transclude></div>"
   scope:
-    onDragEnter: "&"
-    onDragLeave: "&"
-    onPlaceItem: "&"
-    onRemoveItem: "&"
+    dropId: "@"
     maxItems: "@"
   link: (scope, element, attrs, ngDragAndDrop) ->
 
-    scope.left = element[0].offsetLeft
-    scope.top = element[0].offsetTop
-    scope.right = scope.left + element[0].offsetWidth
-    scope.bottom = scope.top + element[0].offsetHeight
-    scope.isActive = false
-    scope.items = []
+    updateDimensions = ->
+      scope.left = element[0].offsetLeft
+      scope.top = element[0].offsetTop
+      scope.right = scope.left + element[0].offsetWidth
+      scope.bottom = scope.top + element[0].offsetHeight
 
     getDroppedPosition = (item) ->
       dropSize = [
@@ -261,44 +298,32 @@ module.directive 'ngDrop', ->
       ]
       switch item.dropTo
         when "top"
-          xPos =
-            scope.left + (dropSize[0] - itemSize[0])/2
+          xPos = scope.left + (dropSize[0] - itemSize[0])/2
           yPos = scope.top
         when "bottom"
-          xPos =
-            scope.left + (dropSize[0] - itemSize[0])/2
-          yPos =
-            scope.top + (dropSize[1] - itemSize[1])
+          xPos = scope.left + (dropSize[0] - itemSize[0])/2
+          yPos = scope.top + (dropSize[1] - itemSize[1])
         when "left"
           xPos = scope.left
-          yPos =
-            scope.top + (dropSize[1] - itemSize[1])/2
+          yPos = scope.top + (dropSize[1] - itemSize[1])/2
         when "right"
-          xPos =
-            scope.left + (dropSize[0] - itemSize[0])
-          yPos =
-            scope.top + (dropSize[1] - itemSize[1])/2
+          xPos = scope.left + (dropSize[0] - itemSize[0])
+          yPos = scope.top + (dropSize[1] - itemSize[1])/2
         when "top left"
           xPos = scope.left
           yPos = scope.top
         when "bottom right"
-          xPos =
-            scope.left + (dropSize[0] - itemSize[0])
-          yPos =
-            scope.top + (dropSize[1] - itemSize[1])
+          xPos = scope.left + (dropSize[0] - itemSize[0])
+          yPos = scope.top + (dropSize[1] - itemSize[1])
         when "bottom left"
           xPos = scope.left
-          yPos =
-            scope.top + (dropSize[1] - itemSize[1])
+          yPos = scope.top + (dropSize[1] - itemSize[1])
         when "top right"
-          xPos =
-            scope.left + (dropSize[0] - itemSize[0])
+          xPos = scope.left + (dropSize[0] - itemSize[0])
           yPos = scope.top
         when "center"
-          xPos =
-            scope.left + (dropSize[0] - itemSize[0])/2
-          yPos =
-            scope.top + (dropSize[1] - itemSize[1])/2
+          xPos = scope.left + (dropSize[0] - itemSize[0])/2
+          yPos = scope.top + (dropSize[1] - itemSize[1])/2
         else
           xPos = 0
           yPos = 0
@@ -311,7 +336,6 @@ module.directive 'ngDrop', ->
         if item.dropTo
           newPos = getDroppedPosition item
           item.updateOffset newPos[0], newPos[1]
-        scope.onPlaceItem?(item, scope)
       else
         item.returnToStartPosition()
 
@@ -320,7 +344,6 @@ module.directive 'ngDrop', ->
         scope.items.push item
         if scope.items.length >= scope.maxItems
           scope.isFull = true
-        scope.onPlaceItem?(scope, item)
         return item
       return false
 
@@ -330,25 +353,33 @@ module.directive 'ngDrop', ->
         scope.items.splice index, 1
         if scope.items.length < scope.maxItems
           scope.isFull = false
-        scope.onRemoveItem?(scope, item)
 
     scope.activate = () ->
       scope.isActive = true
       element.addClass "drop-hovering"
-      scope.onDragEnter?(
-        draggable: ngDragAndDrop.getCurrentDraggable()
-        droppable: scope
-      )
 
     scope.deactivate = () ->
       scope.isActive = false
       ngDragAndDrop.setCurrentDroppable null
       element.removeClass "drop-hovering"
-      draggable = ngDragAndDrop.getCurrentDraggable()
-      if draggable
-        scope.onDragLeave?(
-          draggable: draggable
-          droppable: scope
-        )
 
+    bindEvents = ->
+      w.bind "resize", updateDimensions
+
+    unbindEvents = ->
+      w.unbind "resize", updateDimensions
+
+    if scope.dropId
+      element.addClass scope.dropId
+
+    w = angular.element $window
+    bindEvents()
+
+    scope.$on '$destroy', ->
+      unbindEvents()
+
+    # initialization
+    updateDimensions()
+    scope.isActive = false
+    scope.items = []
     ngDragAndDrop.addDroppable scope

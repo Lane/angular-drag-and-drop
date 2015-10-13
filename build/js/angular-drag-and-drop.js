@@ -1,15 +1,18 @@
 var module;
 
-module = angular.module("onlea.ui.dragdrop", []);
+module = angular.module("laneolson.ui.dragdrop", []);
 
 module.directive('ngDragAndDrop', function() {
   return {
     restrict: 'E',
     scope: {
-      onDrop: "&",
+      onItemPlaced: "&",
+      onItemRemoved: "&",
       onDrag: "&",
       onDragStart: "&",
-      onDragEnd: "&"
+      onDragEnd: "&",
+      onDragEnter: "&",
+      onDragLeave: "&"
     },
     require: 'ngDragAndDrop',
     transclude: true,
@@ -37,14 +40,16 @@ module.directive('ngDragAndDrop', function() {
             if (isInside($scope.currentDraggable.midPoint, dropSpot)) {
               if (!dropSpot.isActive) {
                 this.setCurrentDroppable(dropSpot);
-                results.push(dropSpot.activate());
+                dropSpot.activate();
+                results.push(this.fireCallback('drag-enter'));
               } else {
                 results.push(void 0);
               }
             } else {
               if (dropSpot.isActive) {
                 this.setCurrentDroppable(null);
-                results.push(dropSpot.deactivate());
+                dropSpot.deactivate();
+                results.push(this.fireCallback('drag-leave'));
               } else {
                 results.push(void 0);
               }
@@ -55,11 +60,7 @@ module.directive('ngDragAndDrop', function() {
         this.setCurrentDraggable = function(draggable) {
           $scope.currentDraggable = draggable;
           if (draggable) {
-            if (typeof $scope.onDragStart === "function") {
-              $scope.onDragStart({
-                draggable: draggable
-              });
-            }
+            this.fireCallback('drag-start');
           }
           return $scope.$evalAsync(function() {
             $scope.currentDraggable = draggable;
@@ -85,6 +86,29 @@ module.directive('ngDragAndDrop', function() {
         this.addDraggable = function(draggable) {
           return draggables.push(draggable);
         };
+        this.fireCallback = function(type) {
+          var state;
+          state = {
+            draggable: this.getCurrentDraggable(),
+            droppable: this.getCurrentDroppable()
+          };
+          switch (type) {
+            case 'drag-end':
+              return typeof $scope.onDragEnd === "function" ? $scope.onDragEnd(state) : void 0;
+            case 'drag-start':
+              return typeof $scope.onDragStart === "function" ? $scope.onDragStart(state) : void 0;
+            case 'drag':
+              return typeof $scope.onDrag === "function" ? $scope.onDrag(state) : void 0;
+            case 'item-assigned':
+              return typeof $scope.onItemPlaced === "function" ? $scope.onItemPlaced(state) : void 0;
+            case 'item-removed':
+              return typeof $scope.onItemRemoved === "function" ? $scope.onItemRemoved(state) : void 0;
+            case 'drag-leave':
+              return typeof $scope.onDragLeave === "function" ? $scope.onDragLeave(state) : void 0;
+            case 'drag-enter':
+              return typeof $scope.onDragEnter === "function" ? $scope.onDragEnter(state) : void 0;
+          }
+        };
       }
     ],
     link: function(scope, element, attrs, ngDragAndDrop) {
@@ -104,35 +128,27 @@ module.directive('ngDragAndDrop', function() {
         draggable = ngDragAndDrop.getCurrentDraggable();
         dropSpot = ngDragAndDrop.getCurrentDroppable();
         if (draggable) {
+          ngDragAndDrop.fireCallback('drag-end');
           draggable.deactivate();
-          if (typeof scope.onDragEnd === "function") {
-            scope.onDragEnd({
-              draggable: draggable
-            });
-          }
-          ngDragAndDrop.setCurrentDraggable(null);
-        }
-        if (draggable && dropSpot) {
-          if (!dropSpot.isFull) {
+          if (dropSpot && !dropSpot.isFull) {
+            ngDragAndDrop.fireCallback('item-assigned');
             draggable.assignTo(dropSpot);
+            dropSpot.itemDropped(draggable);
+          } else {
+            draggable.isAssigned = false;
+            draggable.returnToStartPosition();
           }
-          dropSpot.itemDropped(draggable);
-          dropSpot.deactivate();
-        }
-        if (draggable && !dropSpot) {
-          draggable.isAssigned = false;
-          return draggable.returnToStartPosition();
+          if (dropSpot) {
+            dropSpot.deactivate();
+          }
+          return ngDragAndDrop.setCurrentDraggable(null);
         }
       };
       onMove = function(e) {
         var draggable;
         draggable = ngDragAndDrop.getCurrentDraggable();
         if (draggable) {
-          if (typeof scope.onDrag === "function") {
-            scope.onDrag({
-              draggable: draggable
-            });
-          }
+          ngDragAndDrop.fireCallback('drag');
           if (e.touches && e.touches.length === 1) {
             draggable.updateOffset(e.touches[0].clientX, e.touches[0].clientY);
           } else {
@@ -146,17 +162,22 @@ module.directive('ngDragAndDrop', function() {
   };
 });
 
-module.directive('ngDrag', function() {
+module.directive('ngDrag', function($window) {
   return {
     restrict: 'EA',
     require: '^ngDragAndDrop',
     transclude: true,
     template: "<div class='drag-transform' " + "ng-class='{\"drag-active\": isDragging}' ng-style='dragStyle'>" + "<div class='drag-content' ng-class='{dropped: isAssigned}'" + " ng-transclude></div></div>",
     scope: {
-      dropTo: "@"
+      dropTo: "@",
+      dragId: "@",
+      dragData: "="
     },
     link: function(scope, element, attrs, ngDragAndDrop) {
-      var bindEvents, eventOffset, height, onPress, unbindEvents, updateDimensions, width;
+      var bindEvents, eventOffset, height, onPress, unbindEvents, updateDimensions, w, width;
+      if (scope.dragId) {
+        element.addClass(scope.dragId);
+      }
       eventOffset = [0, 0];
       width = element[0].offsetWidth;
       height = element[0].offsetHeight;
@@ -192,12 +213,18 @@ module.directive('ngDrag', function() {
       };
       scope.assignTo = function(dropSpot) {
         scope.dropSpots.push(dropSpot);
-        return scope.isAssigned = true;
+        scope.isAssigned = true;
+        if (dropSpot.dropId) {
+          return element.addClass("in-" + dropSpot.dropId);
+        }
       };
       scope.removeFrom = function(dropSpot) {
         var index;
         index = scope.dropSpots.indexOf(dropSpot);
         if (index > -1) {
+          if (dropSpot.dropId) {
+            element.removeClass("in-" + dropSpot.dropId);
+          }
           scope.dropSpots.splice(index, 1);
           if (scope.dropSpots.length < 1) {
             scope.isAssigned = false;
@@ -215,11 +242,13 @@ module.directive('ngDrag', function() {
       bindEvents = function() {
         var pressEvents;
         pressEvents = "touchstart mousedown";
-        return element.on(pressEvents, onPress);
+        element.on(pressEvents, onPress);
+        return w.bind("resize", updateDimensions);
       };
       unbindEvents = function() {
         element.off(pressEvents, onPress);
-        return element.off(releaseEvents, onRelease);
+        element.off(releaseEvents, onRelease);
+        return w.unbind("resize", updateDimensions);
       };
       onPress = function(e) {
         var dropSpot;
@@ -234,38 +263,40 @@ module.directive('ngDrag', function() {
         ngDragAndDrop.checkForIntersection();
         dropSpot = ngDragAndDrop.getCurrentDroppable();
         if (dropSpot) {
-          return scope.removeFrom(dropSpot);
+          scope.removeFrom(dropSpot);
+          return ngDragAndDrop.fireCallback('item-removed');
         }
       };
+      w = angular.element($window);
       updateDimensions();
       ngDragAndDrop.addDraggable(scope);
       bindEvents();
-      return scope.returnToStartPosition();
+      scope.returnToStartPosition();
+      return scope.$on('$destroy', function() {
+        return unbindEvents();
+      });
     }
   };
 });
 
-module.directive('ngDrop', function() {
+module.directive('ngDrop', function($window) {
   return {
     restrict: 'AE',
     require: '^ngDragAndDrop',
     transclude: true,
     template: "<div class='drop-content' ng-class='{ \"drop-full\": isFull }' " + "ng-transclude></div>",
     scope: {
-      onDragEnter: "&",
-      onDragLeave: "&",
-      onPlaceItem: "&",
-      onRemoveItem: "&",
+      dropId: "@",
       maxItems: "@"
     },
     link: function(scope, element, attrs, ngDragAndDrop) {
-      var addItem, getDroppedPosition;
-      scope.left = element[0].offsetLeft;
-      scope.top = element[0].offsetTop;
-      scope.right = scope.left + element[0].offsetWidth;
-      scope.bottom = scope.top + element[0].offsetHeight;
-      scope.isActive = false;
-      scope.items = [];
+      var addItem, bindEvents, getDroppedPosition, unbindEvents, updateDimensions, w;
+      updateDimensions = function() {
+        scope.left = element[0].offsetLeft;
+        scope.top = element[0].offsetTop;
+        scope.right = scope.left + element[0].offsetWidth;
+        return scope.bottom = scope.top + element[0].offsetHeight;
+      };
       getDroppedPosition = function(item) {
         var dropSize, itemSize, xPos, yPos;
         dropSize = [scope.right - scope.left, scope.bottom - scope.top];
@@ -319,9 +350,8 @@ module.directive('ngDrop', function() {
         if (added) {
           if (item.dropTo) {
             newPos = getDroppedPosition(item);
-            item.updateOffset(newPos[0], newPos[1]);
+            return item.updateOffset(newPos[0], newPos[1]);
           }
-          return typeof scope.onPlaceItem === "function" ? scope.onPlaceItem(item, scope) : void 0;
         } else {
           return item.returnToStartPosition();
         }
@@ -331,9 +361,6 @@ module.directive('ngDrop', function() {
           scope.items.push(item);
           if (scope.items.length >= scope.maxItems) {
             scope.isFull = true;
-          }
-          if (typeof scope.onPlaceItem === "function") {
-            scope.onPlaceItem(scope, item);
           }
           return item;
         }
@@ -345,32 +372,36 @@ module.directive('ngDrop', function() {
         if (index > -1) {
           scope.items.splice(index, 1);
           if (scope.items.length < scope.maxItems) {
-            scope.isFull = false;
+            return scope.isFull = false;
           }
-          return typeof scope.onRemoveItem === "function" ? scope.onRemoveItem(scope, item) : void 0;
         }
       };
       scope.activate = function() {
         scope.isActive = true;
-        element.addClass("drop-hovering");
-        return typeof scope.onDragEnter === "function" ? scope.onDragEnter({
-          draggable: ngDragAndDrop.getCurrentDraggable(),
-          droppable: scope
-        }) : void 0;
+        return element.addClass("drop-hovering");
       };
       scope.deactivate = function() {
-        var draggable;
         scope.isActive = false;
         ngDragAndDrop.setCurrentDroppable(null);
-        element.removeClass("drop-hovering");
-        draggable = ngDragAndDrop.getCurrentDraggable();
-        if (draggable) {
-          return typeof scope.onDragLeave === "function" ? scope.onDragLeave({
-            draggable: draggable,
-            droppable: scope
-          }) : void 0;
-        }
+        return element.removeClass("drop-hovering");
       };
+      bindEvents = function() {
+        return w.bind("resize", updateDimensions);
+      };
+      unbindEvents = function() {
+        return w.unbind("resize", updateDimensions);
+      };
+      if (scope.dropId) {
+        element.addClass(scope.dropId);
+      }
+      w = angular.element($window);
+      bindEvents();
+      scope.$on('$destroy', function() {
+        return unbindEvents();
+      });
+      updateDimensions();
+      scope.isActive = false;
+      scope.items = [];
       return ngDragAndDrop.addDroppable(scope);
     }
   };

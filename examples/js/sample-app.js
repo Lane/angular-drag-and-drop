@@ -1,12 +1,9 @@
-var app, example;
+var app;
 
-app = angular.module('example', ['onlea.example', 'onlea.ui.dragdrop']);
+app = angular.module('example', ['laneolson.ui.dragdrop']);
 
-example = angular.module("onlea.example", []);
-
-example.controller("ExampleController", [
+app.controller("ExampleController", [
   '$scope', function($scope) {
-    console.log("initialized");
     return $scope.logThis = function(message, draggable, droppable) {
       return console.log(message, {
         'draggable': draggable,
