@@ -63,4 +63,4 @@ The following callback functions can be added to the `drag-and-drop` directive.
 ## Todo
 
   - add ability to display a "clone" item while dragging
-  - update position of placed items on viewport changes
+  - proper z-indexing when lifting and placing drag items

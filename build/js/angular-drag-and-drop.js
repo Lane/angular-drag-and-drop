@@ -141,6 +141,7 @@ module.directive('dragAndDrop', function() {
             ngDragAndDrop.fireCallback('item-assigned');
             draggable.assignTo(dropSpot);
             dropSpot.itemDropped(draggable);
+            ngDragAndDrop.fireCallback('item-removed');
           } else {
             draggable.isAssigned = false;
             draggable.returnToStartPosition();
@@ -174,7 +175,7 @@ module.directive('dragItem', function($window) {
     restrict: 'EA',
     require: '^dragAndDrop',
     transclude: true,
-    template: "<div class='drag-transform' " + "ng-class='{\"drag-active\": isDragging}' ng-style='dragStyle'>" + "<div class='drag-content' ng-class='{dropped: isAssigned}'" + " ng-transclude></div></div>",
+    template: "<div class='drag-transform' " + "ng-class='{\"drag-active\": isDragging, dropped: isAssigned}' " + "ng-style='dragStyle'><div class='drag-content' ng-transclude></div></div>",
     scope: {
       x: "@",
       y: "@",
@@ -190,14 +191,14 @@ module.directive('dragItem', function($window) {
       eventOffset = [0, 0];
       width = element[0].offsetWidth;
       height = element[0].offsetHeight;
-      if (!scope.x) {
-        scope.x = 0;
-      }
-      if (!scope.y) {
-        scope.y = 0;
-      }
       scope.dropSpots = [];
       scope.isAssigned = false;
+      if (scope.x == null) {
+        scope.x = 0;
+      }
+      if (scope.y == null) {
+        scope.y = 0;
+      }
       startPosition = [scope.x, scope.y];
       updateDimensions = function() {
         scope.left = scope.x + element[0].offsetLeft;
@@ -265,7 +266,7 @@ module.directive('dragItem', function($window) {
       onPress = function(e) {
         var dropSpot;
         ngDragAndDrop.setCurrentDraggable(scope);
-        scope.isDragging = true;
+        scope.activate();
         scope.isAssigned = false;
         if (e.touches && e.touches.length === 1) {
           eventOffset = [e.touches[0].clientX - scope.left, e.touches[0].clientY - scope.top];
@@ -303,7 +304,7 @@ module.directive('dropSpot', function($window) {
       maxItems: "="
     },
     link: function(scope, element, attrs, ngDragAndDrop) {
-      var addItem, bindEvents, getDroppedPosition, unbindEvents, updateDimensions, w;
+      var addItem, bindEvents, getDroppedPosition, handleResize, unbindEvents, updateDimensions, w;
       updateDimensions = function() {
         scope.left = element[0].offsetLeft;
         scope.top = element[0].offsetTop;
@@ -352,8 +353,10 @@ module.directive('dropSpot', function($window) {
             yPos = scope.top + (dropSize[1] - itemSize[1]) / 2;
             break;
           default:
-            xPos = 0;
-            yPos = 0;
+            if (item.dropOffset) {
+              xPos = scope.left + item.dropOffset[0];
+              yPos = scope.top + item.dropOffset[1];
+            }
         }
         return [xPos, yPos];
       };
@@ -364,13 +367,15 @@ module.directive('dropSpot', function($window) {
           if (item.dropTo) {
             newPos = getDroppedPosition(item);
             return item.updateOffset(newPos[0], newPos[1]);
+          } else {
+            item.dropOffset = [item.left - scope.left, item.top - scope.top];
+            return console.log("OFFSET", item.dropOffset);
           }
         } else {
           return item.returnToStartPosition();
         }
       };
       addItem = function(item) {
-        console.log("ADDING ITEM", scope.isFull, scope.items.length, scope.maxItems);
         if (!scope.isFull) {
           scope.items.push(item);
           if (scope.items.length >= scope.maxItems) {
@@ -399,11 +404,23 @@ module.directive('dropSpot', function($window) {
         ngDragAndDrop.setCurrentDroppable(null);
         return element.removeClass("drop-hovering");
       };
+      handleResize = function() {
+        var i, item, len, newPos, ref, results;
+        updateDimensions();
+        ref = scope.items;
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          newPos = getDroppedPosition(item);
+          results.push(item.updateOffset(newPos[0], newPos[1]));
+        }
+        return results;
+      };
       bindEvents = function() {
-        return w.bind("resize", updateDimensions);
+        return w.bind("resize", handleResize);
       };
       unbindEvents = function() {
-        return w.unbind("resize", updateDimensions);
+        return w.unbind("resize", handleResize);
       };
       if (scope.dropId) {
         element.addClass(scope.dropId);

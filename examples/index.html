@@ -41,7 +41,7 @@
         background:#fff;
         padding:12px;
       }
-      .drag-content.dropped {
+      .dropped .drag-content {
         background-color: #6f9;
       }
       .drag-active .drag-content {
@@ -109,7 +109,7 @@
             on-drag-leave="logThis('dragged out of drop spot', draggable, droppable)"
             enable-swap="true">
 
-            <drag-item class="drag-item" drag-id="item-one" drop-to="top left">
+            <drag-item class="drag-item" drag-id="item-one">
                 <p>Item One</p>
             </drag-item>
 

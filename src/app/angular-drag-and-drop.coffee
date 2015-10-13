@@ -105,7 +105,6 @@ module.directive 'dragAndDrop', ->
     moveEvents = "touchmove mousemove"
     releaseEvents = "touchend mouseup"
 
-
     bindEvents = () ->
       element.on moveEvents, onMove
       element.on releaseEvents, onRelease
@@ -138,6 +137,7 @@ module.directive 'dragAndDrop', ->
           ngDragAndDrop.fireCallback 'item-assigned'
           draggable.assignTo dropSpot
           dropSpot.itemDropped draggable
+          ngDragAndDrop.fireCallback 'item-removed'
         else
           # if released over nothing, remove the assignment
           draggable.isAssigned = false
@@ -152,11 +152,15 @@ module.directive 'dragAndDrop', ->
       if draggable
         ngDragAndDrop.fireCallback 'drag'
         if e.touches and e.touches.length is 1
+          # update position based on touch event
           draggable.updateOffset e.touches[0].clientX, e.touches[0].clientY
         else
+          # update position based on mouse event
           draggable.updateOffset e.clientX, e.clientY
+        # check if dragging over a drop spot
         ngDragAndDrop.checkForIntersection()
 
+    # initialize
     bindEvents()
 
 
@@ -167,9 +171,8 @@ module.directive 'dragItem', ($window) ->
   require: '^dragAndDrop'
   transclude: true
   template: "<div class='drag-transform' " +
-    "ng-class='{\"drag-active\": isDragging}' ng-style='dragStyle'>" +
-    "<div class='drag-content' ng-class='{dropped: isAssigned}'" +
-    " ng-transclude></div></div>"
+    "ng-class='{\"drag-active\": isDragging, dropped: isAssigned}' " +
+    "ng-style='dragStyle'><div class='drag-content' ng-transclude></div></div>"
   scope:
     x: "@"
     y: "@"
@@ -178,22 +181,22 @@ module.directive 'dragItem', ($window) ->
     dragData: "="
   link: (scope, element, attrs, ngDragAndDrop) ->
 
+    # add a class based on the drag ID
     if scope.dragId
       element.addClass scope.dragId
 
+    # set starting values
     eventOffset = [0, 0]
     width = element[0].offsetWidth
     height = element[0].offsetHeight
-
-    unless scope.x
-      scope.x = 0
-    unless scope.y
-      scope.y = 0
-
     scope.dropSpots = []
     scope.isAssigned = false
+
+    scope.x ?= 0
+    scope.y ?= 0
     startPosition = [scope.x, scope.y]
 
+    # set the position values on the drag item
     updateDimensions = () ->
       scope.left = scope.x + element[0].offsetLeft
       scope.right = scope.left + width
@@ -204,6 +207,7 @@ module.directive 'dragItem', ($window) ->
         scope.top + height/2
       ]
 
+    # update the x / y offset of the drag item and set the style
     scope.updateOffset = (x,y) ->
       scope.x = x - (eventOffset[0] + element[0].offsetLeft)
       scope.y = y - (eventOffset[1] + element[0].offsetTop)
@@ -214,6 +218,7 @@ module.directive 'dragItem', ($window) ->
         scope.dragStyle =
           transform: "translate(#{scope.x}px, #{scope.y}px)"
 
+    # return the drag item to its original position
     scope.returnToStartPosition = ->
       scope.x = startPosition[0]
       scope.y = startPosition[1]
@@ -222,12 +227,16 @@ module.directive 'dragItem', ($window) ->
         scope.dragStyle =
           transform: "translate(#{scope.x}px, #{scope.y}px)"
 
+    # assign the drag item to a drop spot
     scope.assignTo = (dropSpot) ->
       scope.dropSpots.push dropSpot
       scope.isAssigned = true
       if dropSpot.dropId
         element.addClass "in-#{dropSpot.dropId}"
 
+    # finds the provided drop spot in the list of assigned drop spots
+    # removes the drop spot from the list, and removes the draggable from
+    # the drop spot.
     scope.removeFrom = (dropSpot) ->
       index = scope.dropSpots.indexOf dropSpot
       if index > -1
@@ -238,24 +247,28 @@ module.directive 'dragItem', ($window) ->
           scope.isAssigned = false
         dropSpot.removeItem scope
 
+    # sets dragging status on the drag item
     scope.activate = () ->
       scope.isDragging = true
 
+    # removes dragging status and resets the event offset
     scope.deactivate = () ->
       eventOffset = [0, 0]
       scope.isDragging = false
 
+    # bind press and window resize to the drag item
     bindEvents = () ->
       element.on pressEvents, onPress
       w.bind "resize", updateDimensions
 
+    # unbind press and window resize from the drag item
     unbindEvents = () ->
       element.off pressEvents, onPress
       w.unbind "resize", updateDimensions
 
     onPress = (e) ->
       ngDragAndDrop.setCurrentDraggable scope
-      scope.isDragging = true
+      scope.activate()
       scope.isAssigned = false
       if e.touches and e.touches.length is 1
         eventOffset = [
@@ -339,8 +352,9 @@ module.directive 'dropSpot', ($window) ->
           xPos = scope.left + (dropSize[0] - itemSize[0])/2
           yPos = scope.top + (dropSize[1] - itemSize[1])/2
         else
-          xPos = 0
-          yPos = 0
+          if item.dropOffset
+            xPos = scope.left + item.dropOffset[0]
+            yPos = scope.top + item.dropOffset[1]
 
       return [xPos, yPos]
 
@@ -350,11 +364,16 @@ module.directive 'dropSpot', ($window) ->
         if item.dropTo
           newPos = getDroppedPosition item
           item.updateOffset newPos[0], newPos[1]
+        else
+          item.dropOffset = [
+            item.left - scope.left
+            item.top - scope.top
+          ]
+          console.log "OFFSET", item.dropOffset
       else
         item.returnToStartPosition()
 
     addItem = (item) ->
-      console.log "ADDING ITEM", scope.isFull, scope.items.length, scope.maxItems
       unless scope.isFull
         scope.items.push item
         if scope.items.length >= scope.maxItems
@@ -378,11 +397,17 @@ module.directive 'dropSpot', ($window) ->
       ngDragAndDrop.setCurrentDroppable null
       element.removeClass "drop-hovering"
 
+    handleResize = () ->
+      updateDimensions()
+      for item in scope.items
+        newPos = getDroppedPosition(item)
+        item.updateOffset newPos[0], newPos[1]
+
     bindEvents = ->
-      w.bind "resize", updateDimensions
+      w.bind "resize", handleResize
 
     unbindEvents = ->
-      w.unbind "resize", updateDimensions
+      w.unbind "resize", handleResize
 
     if scope.dropId
       element.addClass scope.dropId
