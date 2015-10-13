@@ -1,0 +1,39 @@
+{
+  "name": "angular-drag-and-drop",
+  "version": "1.0.0",
+  "description": "drag and drop functionality in angular",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lane/angular-drag-and-drop.git"
+  },
+  "keywords": [
+    "angular",
+    "drag",
+    "drop"
+  ],
+  "author": "Lane Olson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Lane/angular-drag-and-drop/issues"
+  },
+  "homepage": "https://github.com/Lane/angular-drag-and-drop",
+  "dependencies": {
+    "browser-sync": "^2.9.11",
+    "coffee-script": "^1.10.0",
+    "gulp": "^3.9.0",
+    "gulp-autoprefixer": "^3.0.2",
+    "gulp-coffee": "^2.3.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-less": "^3.0.3",
+    "gulp-plumber": "^1.0.1",
+    "gulp-util": "^3.0.6",
+    "gulp-watch": "^4.3.5"
+  }
+}

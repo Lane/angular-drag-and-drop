@@ -1,0 +1,46 @@
+.drag-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+ng-drag {
+  position: relative;
+  display: inline-block;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  cursor: -webkit-grab;
+  cursor: grab;
+  z-index: 10;
+}
+ng-drag:active {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+.drag-transform {
+  -webkit-transition: -webkit-transform 0.25s ease-out;
+          transition: transform 0.25s ease-out;
+  -webkit-transform-origin: center center;
+      -ms-transform-origin: center center;
+          transform-origin: center center;
+}
+.drag-content {
+  -webkit-transform: scale(1);
+      -ms-transform: scale(1);
+          transform: scale(1);
+  -webkit-transition: all 0.1s ease-in-out;
+          transition: all 0.1s ease-in-out;
+}
+.drag-active {
+  z-index: 20;
+  -webkit-transition: none;
+          transition: none;
+}
+.drag-active .drag-content {
+  -webkit-transform: scale(1.15);
+      -ms-transform: scale(1.15);
+          transform: scale(1.15);
+}

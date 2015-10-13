@@ -1,0 +1,34 @@
+.drag-container {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+}
+
+ng-drag {
+  position:relative;
+  display:inline-block;
+  user-select: none;
+  cursor:grab;
+  z-index:10;
+  &:active {
+    cursor:grabbing;
+  }
+}
+.drag-transform {
+  transition: transform 0.25s ease-out;
+  transform-origin: center center;
+}
+.drag-content {
+  transform: scale(1);
+  transition: all 0.1s ease-in-out;
+}
+
+.drag-active {
+  z-index:20;
+  transition:none;
+  .drag-content {
+    transform: scale(1.15);
+  }
+}
