@@ -98,7 +98,7 @@
 
       <div ng-app="example">
         <div ng-controller="ExampleController">
-          <ng-drag-and-drop
+          <drag-and-drop
             on-item-placed="logThis('item assigned', draggable, droppable)"
             on-item-removed="logThis('item removed', draggable, droppable)"
             on-drag-start="logThis('started dragging', draggable)"
@@ -106,27 +106,27 @@
             on-drag-enter="logThis('dragged over drop spot', draggable, droppable)"
             on-drag-leave="logThis('dragged out of drop spot', draggable, droppable)">
 
-            <ng-drag class="drag-item" drag-id="item-one" drop-to="top left">
+            <drag-item class="drag-item" drag-id="item-one" drop-to="top left">
                 <p>Item One</p>
-            </ng-drag>
+            </drag-item>
 
-            <ng-drag class="drag-item" drag-id="item-two" drop-to="top right">
+            <drag-item class="drag-item" drag-id="item-two" drop-to="top right">
                 <p>Item Two</p>
-            </ng-drag>
+            </drag-item>
 
-            <ng-drag class="drag-item" drag-id="item-three" drop-to="bottom left">
+            <drag-item class="drag-item" drag-id="item-three" drop-to="bottom left">
                 <p>Item Three</p>
-            </ng-drag>
+            </drag-item>
 
-            <ng-drag class="drag-item" drag-id="item-four" drop-to="bottom right">
+            <drag-item class="drag-item" drag-id="item-four" drop-to="bottom right">
                 <p>Item Four</p>
-            </ng-drag>
+            </drag-item>
 
-            <ng-drop max-items="2" class="drop-spot" drop-id="drop-one">
+            <drop-spot max-items="2" class="drop-spot" drop-id="drop-one">
               <p>Drop Here</p>
-            </ng-drop>
+            </drop-spot>
 
-          </ng-drag-and-drop>
+          </drag-and-drop>
         </div>
       </div>
 

@@ -2,7 +2,7 @@ module = angular.module "laneolson.ui.dragdrop", []
 
 # Drag and Drop Directive
 # ----------
-module.directive 'ngDragAndDrop', ->
+module.directive 'dragAndDrop', ->
   restrict: 'E'
   scope:
     onItemPlaced: "&"
@@ -12,7 +12,7 @@ module.directive 'ngDragAndDrop', ->
     onDragEnd: "&"
     onDragEnter: "&"
     onDragLeave: "&"
-  require: 'ngDragAndDrop'
+  require: 'dragAndDrop'
   transclude: true
   template: "<div class='drag-container' ng-class='{dragging: isDragging}' " +
     "ng-transclude></div>"
@@ -153,9 +153,9 @@ module.directive 'ngDragAndDrop', ->
 
 # Drag Directive
 # ----------
-module.directive 'ngDrag', ($window) ->
+module.directive 'dragItem', ($window) ->
   restrict: 'EA'
-  require: '^ngDragAndDrop'
+  require: '^dragAndDrop'
   transclude: true
   template: "<div class='drag-transform' " +
     "ng-class='{\"drag-active\": isDragging}' ng-style='dragStyle'>" +
@@ -270,9 +270,9 @@ module.directive 'ngDrag', ($window) ->
 
 # Drop Directive
 # ----------
-module.directive 'ngDrop', ($window) ->
+module.directive 'dropSpot', ($window) ->
   restrict: 'AE'
-  require: '^ngDragAndDrop'
+  require: '^dragAndDrop'
   transclude: true
   template: "<div class='drop-content' ng-class='{ \"drop-full\": isFull }' "+
     "ng-transclude></div>"

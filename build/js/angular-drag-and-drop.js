@@ -2,7 +2,7 @@ var module;
 
 module = angular.module("laneolson.ui.dragdrop", []);
 
-module.directive('ngDragAndDrop', function() {
+module.directive('dragAndDrop', function() {
   return {
     restrict: 'E',
     scope: {
@@ -14,7 +14,7 @@ module.directive('ngDragAndDrop', function() {
       onDragEnter: "&",
       onDragLeave: "&"
     },
-    require: 'ngDragAndDrop',
+    require: 'dragAndDrop',
     transclude: true,
     template: "<div class='drag-container' ng-class='{dragging: isDragging}' " + "ng-transclude></div>",
     controller: [
@@ -162,10 +162,10 @@ module.directive('ngDragAndDrop', function() {
   };
 });
 
-module.directive('ngDrag', function($window) {
+module.directive('dragItem', function($window) {
   return {
     restrict: 'EA',
-    require: '^ngDragAndDrop',
+    require: '^dragAndDrop',
     transclude: true,
     template: "<div class='drag-transform' " + "ng-class='{\"drag-active\": isDragging}' ng-style='dragStyle'>" + "<div class='drag-content' ng-class='{dropped: isAssigned}'" + " ng-transclude></div></div>",
     scope: {
@@ -279,10 +279,10 @@ module.directive('ngDrag', function($window) {
   };
 });
 
-module.directive('ngDrop', function($window) {
+module.directive('dropSpot', function($window) {
   return {
     restrict: 'AE',
-    require: '^ngDragAndDrop',
+    require: '^dragAndDrop',
     transclude: true,
     template: "<div class='drop-content' ng-class='{ \"drop-full\": isFull }' " + "ng-transclude></div>",
     scope: {
