@@ -10,10 +10,7 @@ browserSync       = require 'browser-sync'
 config =
   source:
     coffee: "./src/app/angular-drag-and-drop.coffee"
-    exampleCoffee: "./src/app/sample-app.coffee"
     less: "./src/less/**/*.less"
-    html: "./src/**/*.html"
-    vendor: "./src/vendor/**/*.min.js"
   target: "./build"
   demo: "./examples"
 
@@ -39,40 +36,19 @@ gulp.task "less", ->
     .pipe gulp.dest "#{config.target}/css"
 
 gulp.task "coffee", ->
-
   gulp.src config.source.coffee
     .pipe coffee bare: true
     .pipe concat "angular-drag-and-drop.js"
     .pipe gulp.dest "#{config.target}/js"
 
-gulp.task "example-coffee", ->
-
-  gulp.src config.source.exampleCoffee
-    .pipe coffee bare: true
-    .pipe concat "sample-app.js"
-    .pipe gulp.dest "#{config.demo}/js"
-
-gulp.task "vendor", ->
-
-  gulp.src config.source.vendor
-    .pipe gulp.dest "#{config.demo}/vendor"
-
-gulp.task "html", ->
-
-  gulp.src config.source.html
-    .pipe gulp.dest config.demo + "/"
-
 gulp.task "watch", ->
   gulp.watch config.source.less, ["less"]
   gulp.watch config.source.coffee, ["coffee"]
-  gulp.watch config.source.html, ["html"]
 
 gulp.task "browser-sync", ->
   browserSync.init [
-    config.source.less
-    config.source.coffee
-    config.source.html
-    config.source.exampleCoffee
+    config.target + '/**/*'
+    config.demo + '/**/*'
   ],
     server:
       baseDir: './'
@@ -84,5 +60,5 @@ gulp.task "browser-sync", ->
       enabled: true
 
 gulp.task "default", [
-  "less", "coffee", "example-coffee", "vendor", "html", "watch", "browser-sync"
+  "less", "coffee", "watch", "browser-sync"
 ]

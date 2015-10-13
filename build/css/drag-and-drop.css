@@ -20,28 +20,28 @@ drag-item:active {
   cursor: -webkit-grabbing;
   cursor: grabbing;
 }
-drag-item .drag-transform {
+.drag-transform {
   -webkit-transition: -webkit-transform 0.25s ease-out;
           transition: transform 0.25s ease-out;
   -webkit-transform-origin: center center;
       -ms-transform-origin: center center;
           transform-origin: center center;
 }
-drag-item .drag-transform.drag-active {
+.drag-transform.drag-active {
   -webkit-transition: -webkit-transform 0.25s cubic-bezier(0, 0.5, 0, 1);
           transition: transform 0.25s cubic-bezier(0, 0.5, 0, 1);
 }
-drag-item .drag-content {
+.drag-content {
   -webkit-transform: scale(1);
       -ms-transform: scale(1);
           transform: scale(1);
   -webkit-transition: all 0.1s ease-in-out;
           transition: all 0.1s ease-in-out;
 }
-drag-item .drag-active {
+.drag-active {
   z-index: 20;
 }
-drag-item .drag-active .drag-content {
+.drag-active .drag-content {
   -webkit-transform: scale(1.15);
       -ms-transform: scale(1.15);
           transform: scale(1.15);

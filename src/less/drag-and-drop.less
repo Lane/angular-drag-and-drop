@@ -14,19 +14,19 @@ drag-item {
   &:active {
     cursor:grabbing;
   }
-  .drag-transform {
-    transition: transform 0.25s ease-out;
-    transform-origin: center center;
-    &.drag-active { transition: transform 0.25s cubic-bezier(0,.5,0,1); }
-  }
+}
+.drag-transform {
+  transition: transform 0.25s ease-out;
+  transform-origin: center center;
+  &.drag-active { transition: transform 0.25s cubic-bezier(0,.5,0,1); }
+}
+.drag-content {
+  transform: scale(1);
+  transition: all 0.1s ease-in-out;
+}
+.drag-active {
+  z-index:20;
   .drag-content {
-    transform: scale(1);
-    transition: all 0.1s ease-in-out;
-  }
-  .drag-active {
-    z-index:20;
-    .drag-content {
-      transform: scale(1.15);
-    }
+    transform: scale(1.15);
   }
 }
