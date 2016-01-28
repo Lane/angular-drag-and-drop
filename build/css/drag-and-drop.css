@@ -5,6 +5,24 @@
   right: 0;
   bottom: 0;
 }
+.drag-container * {
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+.clone {
+  opacity: 0;
+  z-index: 0;
+}
+.drag-return drag-item {
+  -webkit-transition: all ease-in-out 0.5s;
+          transition: all ease-in-out 0.5s;
+}
+.clone-active {
+  opacity: 1;
+  z-index: 9999;
+}
 drag-item {
   position: relative;
   display: inline-block;
@@ -40,9 +58,4 @@ drag-item:active {
 }
 .drag-active {
   z-index: 20;
-}
-.drag-active .drag-content {
-  -webkit-transform: scale(1.15);
-      -ms-transform: scale(1.15);
-          transform: scale(1.15);
 }

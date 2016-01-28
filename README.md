@@ -1,8 +1,6 @@
 # Angular Drag and Drop
 Customizable drag and drop behaviour for Angular.
 
-**NOTE: This module is still under development**
-
 ## Getting Started
 
   1. Add `angular-drag-and-drop.js`
@@ -45,6 +43,7 @@ The following callback functions can be added to the `drag-and-drop` directive.
   - `drop-to`: used to position the element within the drop spot.
   - `x`: the x offset of the drag item
   - `y`: the y offset of the drag item
+  - `clone` : a clone item is dragged instead of the original item
 
 #### `drop-spot`
   - `drop-id`: an identifier that is used for this drop item.  When set, the `drop-spot` element will have a class that matches the `drag-id`.
@@ -62,5 +61,4 @@ The following callback functions can be added to the `drag-and-drop` directive.
 
 ## Todo
 
-  - add ability to display a "clone" item while dragging
   - proper z-indexing when lifting and placing drag items

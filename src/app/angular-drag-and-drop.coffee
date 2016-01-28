@@ -13,6 +13,7 @@ module.directive 'dragAndDrop', ->
     onDragEnter: "&"
     onDragLeave: "&"
     enableSwap: "="
+    fixedPositions: "="
   require: 'dragAndDrop'
   transclude: true
   template: "<div class='drag-container' ng-class='{dragging: isDragging}' " +
@@ -113,7 +114,7 @@ module.directive 'dragAndDrop', ->
       element.off moveEvents, onMove
       element.off releaseEvents, onRelease
 
-    onRelease = () ->
+    onRelease = (e) ->
 
       # get the item that is currently being dragged
       draggable = ngDragAndDrop.getCurrentDraggable()
@@ -123,6 +124,13 @@ module.directive 'dragAndDrop', ->
 
       # deactivate the draggable
       if draggable
+        element.addClass "drag-return"
+        # NOTE: This is kind of a hack to allow the drag item to have
+        # a return animation.  ngAnimate could be used for the animation
+        # to prevent this.
+        setTimeout ->
+          element.removeClass "drag-return"
+        , 500
         ngDragAndDrop.fireCallback 'drag-end'
         draggable.deactivate()
         if dropSpot and not dropSpot.isFull
@@ -140,8 +148,10 @@ module.directive 'dragAndDrop', ->
           ngDragAndDrop.fireCallback 'item-removed'
         else
           # if released over nothing, remove the assignment
+
           draggable.isAssigned = false
-          draggable.returnToStartPosition()
+          if scope.fixedPositions
+            draggable.returnToStartPosition()
         if dropSpot
           dropSpot.deactivate()
         ngDragAndDrop.setCurrentDraggable null
@@ -166,24 +176,32 @@ module.directive 'dragAndDrop', ->
 
 # Drag Directive
 # ----------
-module.directive 'dragItem', ($window) ->
+module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
   restrict: 'EA'
   require: '^dragAndDrop'
   transclude: true
   template: "<div class='drag-transform' " +
-    "ng-class='{\"drag-active\": isDragging, dropped: isAssigned}' " +
-    "ng-style='dragStyle'><div class='drag-content' ng-transclude></div></div>"
+    "ng-class='{ dropped: isAssigned}' " +
+    "><div class='drag-content' ng-transclude></div></div>"
   scope:
     x: "@"
     y: "@"
     dropTo: "@"
     dragId: "@"
     dragData: "="
+    clone: "="
   link: (scope, element, attrs, ngDragAndDrop) ->
-
     # add a class based on the drag ID
     if scope.dragId
       element.addClass scope.dragId
+
+    if scope.clone
+      cloneEl = angular.element(element[0].cloneNode(true))
+      element.parent().append cloneEl
+      cloneEl.addClass "clone"
+      transformEl = cloneEl
+    else
+      transformEl = element
 
     # set starting values
     eventOffset = [0, 0]
@@ -207,25 +225,39 @@ module.directive 'dragItem', ($window) ->
         scope.top + height/2
       ]
 
+    setClonePosition = ->
+      elemRect = element[0].getBoundingClientRect()
+      transformEl.css
+        position: "absolute"
+        top: elemRect.top+"px"
+        left: elemRect.left+"px"
+        bottom: "auto"
+        right: "auto"
+        transform: "translate(0,0)"
+        "-webkit-transform": "translate(0,0)"
+        "-ms-transform": "translate(0,0)"
+
+
     # update the x / y offset of the drag item and set the style
     scope.updateOffset = (x,y) ->
       scope.x = x - (eventOffset[0] + element[0].offsetLeft)
       scope.y = y - (eventOffset[1] + element[0].offsetTop)
-
       updateDimensions()
+      transformEl.css
+        "transform": "translate(#{scope.x}px, #{scope.y}px)"
+        "-webkit-transform": "translate(#{scope.x}px, #{scope.y}px)"
+        "-ms-transform": "translate(#{scope.x}px, #{scope.y}px)"
 
-      scope.$evalAsync ->
-        scope.dragStyle =
-          transform: "translate(#{scope.x}px, #{scope.y}px)"
 
     # return the drag item to its original position
     scope.returnToStartPosition = ->
       scope.x = startPosition[0]
       scope.y = startPosition[1]
       updateDimensions()
-      scope.$evalAsync ->
-        scope.dragStyle =
-          transform: "translate(#{scope.x}px, #{scope.y}px)"
+      transformEl.css
+        "transform": "translate(#{scope.x}px, #{scope.y}px)"
+        "-webkit-transform": "translate(#{scope.x}px, #{scope.y}px)"
+        "-ms-transform": "translate(#{scope.x}px, #{scope.y}px)"
 
     # assign the drag item to a drop spot
     scope.assignTo = (dropSpot) ->
@@ -249,11 +281,15 @@ module.directive 'dragItem', ($window) ->
 
     # sets dragging status on the drag item
     scope.activate = () ->
+      element.addClass "drag-active"
       scope.isDragging = true
 
     # removes dragging status and resets the event offset
     scope.deactivate = () ->
       eventOffset = [0, 0]
+      if scope.clone
+        cloneEl.removeClass "clone-active"
+      element.removeClass "drag-active"
       scope.isDragging = false
 
     # bind press and window resize to the drag item
@@ -267,6 +303,9 @@ module.directive 'dragItem', ($window) ->
       w.unbind "resize", updateDimensions
 
     onPress = (e) ->
+      if scope.clone
+        cloneEl.addClass "clone-active"
+        setClonePosition()
       ngDragAndDrop.setCurrentDraggable scope
       scope.activate()
       scope.isAssigned = false
@@ -294,6 +333,7 @@ module.directive 'dragItem', ($window) ->
     scope.$on '$destroy', ->
       unbindEvents()
 
+]
 
 # Drop Directive
 # ----------
@@ -369,9 +409,9 @@ module.directive 'dropSpot', ($window) ->
             item.left - scope.left
             item.top - scope.top
           ]
-          console.log "OFFSET", item.dropOffset
       else
-        item.returnToStartPosition()
+        if scope.fixedPositions
+          item.returnToStartPosition()
 
     addItem = (item) ->
       unless scope.isFull

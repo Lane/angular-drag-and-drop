@@ -44,7 +44,8 @@
       .dropped .drag-content {
         background-color: #6f9;
       }
-      .drag-active .drag-content {
+      .clone-active .drag-content,
+      .drag-active:not([clone]) .drag-content {
         transform: scale(1.15) rotate(3deg);
         background-color:#ffc;
         box-shadow: 0 1px 8px rgba(0,0,0,0.35);
@@ -107,21 +108,21 @@
             on-drag-end="logThis('done dragging', draggable, droppable)"
             on-drag-enter="logThis('dragged over drop spot', draggable, droppable)"
             on-drag-leave="logThis('dragged out of drop spot', draggable, droppable)"
-            enable-swap="true">
+            >
 
-            <drag-item class="drag-item" drag-id="item-one">
-                <p>Item One</p>
+            <drag-item class="drag-item" drag-id="item-one" clone="true">
+                <p>Clone</p>
             </drag-item>
 
-            <drag-item class="drag-item" drag-id="item-two" drop-to="top right">
+            <drag-item class="drag-item" drag-id="item-two" drop-to="center">
                 <p>Item Two</p>
             </drag-item>
 
-            <drag-item class="drag-item" drag-id="item-three" drop-to="bottom left">
+            <drag-item class="drag-item" drag-id="item-three" drop-to="center">
                 <p>Item Three</p>
             </drag-item>
 
-            <drag-item class="drag-item" drag-id="item-four" drop-to="bottom right">
+            <drag-item class="drag-item" drag-id="item-four" drop-to="center">
                 <p>Item Four</p>
             </drag-item>
 
