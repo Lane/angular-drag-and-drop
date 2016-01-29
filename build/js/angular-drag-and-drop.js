@@ -310,6 +310,7 @@ module.directive('dragItem', [
         onPress = function(e) {
           var dropSpot;
           if (scope.clone) {
+            scope.returnToStartPosition();
             cloneEl.addClass("clone-active");
             setClonePosition();
           }
@@ -325,8 +326,9 @@ module.directive('dragItem', [
           dropSpot = ngDragAndDrop.getCurrentDroppable();
           if (dropSpot) {
             scope.removeFrom(dropSpot);
-            return ngDragAndDrop.fireCallback('item-removed');
+            ngDragAndDrop.fireCallback('item-removed');
           }
+          return e.preventDefault();
         };
         pressEvents = "touchstart mousedown";
         w = angular.element($window);

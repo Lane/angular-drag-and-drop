@@ -321,6 +321,7 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
 
     onPress = (e) ->
       if scope.clone
+        scope.returnToStartPosition()
         cloneEl.addClass "clone-active"
         setClonePosition()
       ngDragAndDrop.setCurrentDraggable scope
@@ -338,6 +339,7 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
       if dropSpot
         scope.removeFrom dropSpot
         ngDragAndDrop.fireCallback 'item-removed'
+      e.preventDefault()
 
     # initialization
     pressEvents = "touchstart mousedown"

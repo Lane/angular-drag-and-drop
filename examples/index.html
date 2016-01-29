@@ -7,8 +7,20 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="./../build/css/drag-and-drop.css">
+    <script>
+    if (typeof console.log == "object" && Function.prototype.bind && console) {
+        ["log","info","warn","error","assert","dir","clear","profile","profileEnd"]
+            .forEach(function (method) {
+                console[method] = this.call(console[method], console);
+            }, Function.prototype.bind);
+    } else {
+      console = {
+        log: function() {}
+      }
+    }
+    </script>
     <style>
-      html,body { margin:0;padding:0;width:100%;height:100%;font-family: Roboto, sans-serif;}
+      html,body { margin:0;padding:0;width:100%;height:100%;font-family: Roboto, sans-serif; overflow:hidden;}
       p { margin: 0; }
 
 
@@ -126,7 +138,7 @@
             </drag-item>
 
             <drag-item class="drag-item" drag-id="item-two" drop-to="center" lock-vertical="true">
-                <p>Item Two</p>
+                <p>Vertical postion locked</p>
             </drag-item>
 
             <drag-item class="drag-item" drag-id="item-three" drop-to="center">
