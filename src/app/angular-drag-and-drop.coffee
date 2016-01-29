@@ -2,8 +2,8 @@ module = angular.module "laneolson.ui.dragdrop", []
 
 # Drag and Drop Directive
 # ----------
-module.directive 'dragAndDrop', ->
-  restrict: 'E'
+module.directive 'dragAndDrop', ['$document', ($document) ->
+  restrict: 'AE'
   scope:
     onItemPlaced: "&"
     onItemRemoved: "&"
@@ -15,9 +15,6 @@ module.directive 'dragAndDrop', ->
     enableSwap: "="
     fixedPositions: "="
   require: 'dragAndDrop'
-  transclude: true
-  template: "<div class='drag-container' ng-class='{dragging: isDragging}' " +
-    "ng-transclude></div>"
   controller: [
     '$q'
     '$scope'
@@ -107,12 +104,12 @@ module.directive 'dragAndDrop', ->
     releaseEvents = "touchend mouseup"
 
     bindEvents = () ->
-      element.on moveEvents, onMove
-      element.on releaseEvents, onRelease
+      $document.on moveEvents, onMove
+      $document.on releaseEvents, onRelease
 
     unbindEvents = () ->
-      element.off moveEvents, onMove
-      element.off releaseEvents, onRelease
+      $document.off moveEvents, onMove
+      $document.off releaseEvents, onRelease
 
     onRelease = (e) ->
 
@@ -172,7 +169,7 @@ module.directive 'dragAndDrop', ->
 
     # initialize
     bindEvents()
-
+]
 
 # Drag Directive
 # ----------
@@ -190,6 +187,8 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
     dragId: "@"
     dragData: "="
     clone: "="
+    lockHorizontal: "="
+    lockVertical: "="
   link: (scope, element, attrs, ngDragAndDrop) ->
     # add a class based on the drag ID
     if scope.dragId
@@ -224,6 +223,14 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
         scope.left + width/2
         scope.top + height/2
       ]
+      if scope.lockVertical
+        # track the horizontal percentage position in the container
+        # if we're locked vertically
+        scope.percent = 100 *
+          (scope.left + element[0].clientWidth/2) /
+          element.parent()[0].clientWidth
+
+        scope.percent = Math.min(100, Math.max(0, scope.percent))
 
     setClonePosition = ->
       elemRect = element[0].getBoundingClientRect()
@@ -237,27 +244,37 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
         "-webkit-transform": "translate(0,0)"
         "-ms-transform": "translate(0,0)"
 
+    scope.setPercentPostion = (xPercent,yPercent) ->
+      newY =
+        (element.parent()[0].clientHeight * (yPercent/100)) -
+        element[0].clientHeight/2
+      newX =
+        (element.parent()[0].clientWidth * (xPercent/100)) -
+        element[0].clientWidth/2
+      scope.setPosition(newX, newY)
+
+    scope.setPosition = (x, y) ->
+      scope.x = if scope.lockHorizontal then 0 else x
+      scope.y = if scope.lockVertical then 0 else y
+      updateDimensions()
+      transformEl.css
+        "transform": "translate(#{scope.x}px, #{scope.y}px)"
+        "-webkit-transform": "translate(#{scope.x}px, #{scope.y}px)"
+        "-ms-transform": "translate(#{scope.x}px, #{scope.y}px)"
 
     # update the x / y offset of the drag item and set the style
     scope.updateOffset = (x,y) ->
-      scope.x = x - (eventOffset[0] + element[0].offsetLeft)
-      scope.y = y - (eventOffset[1] + element[0].offsetTop)
-      updateDimensions()
-      transformEl.css
-        "transform": "translate(#{scope.x}px, #{scope.y}px)"
-        "-webkit-transform": "translate(#{scope.x}px, #{scope.y}px)"
-        "-ms-transform": "translate(#{scope.x}px, #{scope.y}px)"
-
+      scope.setPosition(
+        x - (eventOffset[0] + element[0].offsetLeft),
+        y - (eventOffset[1] + element[0].offsetTop)
+      )
 
     # return the drag item to its original position
     scope.returnToStartPosition = ->
-      scope.x = startPosition[0]
-      scope.y = startPosition[1]
-      updateDimensions()
-      transformEl.css
-        "transform": "translate(#{scope.x}px, #{scope.y}px)"
-        "-webkit-transform": "translate(#{scope.x}px, #{scope.y}px)"
-        "-ms-transform": "translate(#{scope.x}px, #{scope.y}px)"
+      scope.setPosition(
+        startPosition[0],
+        startPosition[1]
+      )
 
     # assign the drag item to a drop spot
     scope.assignTo = (dropSpot) ->
@@ -329,6 +346,8 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
     ngDragAndDrop.addDraggable scope
     bindEvents()
     scope.returnToStartPosition()
+
+    scope.$emit 'drag-ready', scope
 
     scope.$on '$destroy', ->
       unbindEvents()

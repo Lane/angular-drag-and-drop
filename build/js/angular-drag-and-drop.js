@@ -2,180 +2,180 @@ var module;
 
 module = angular.module("laneolson.ui.dragdrop", []);
 
-module.directive('dragAndDrop', function() {
-  return {
-    restrict: 'E',
-    scope: {
-      onItemPlaced: "&",
-      onItemRemoved: "&",
-      onDrag: "&",
-      onDragStart: "&",
-      onDragEnd: "&",
-      onDragEnter: "&",
-      onDragLeave: "&",
-      enableSwap: "=",
-      fixedPositions: "="
-    },
-    require: 'dragAndDrop',
-    transclude: true,
-    template: "<div class='drag-container' ng-class='{dragging: isDragging}' " + "ng-transclude></div>",
-    controller: [
-      '$q', '$scope', function($q, $scope) {
-        var currentDroppable, draggables, droppables, isInside, isIntersecting;
-        $scope.draggables = draggables = [];
-        $scope.droppables = droppables = [];
-        $scope.isDragging = false;
-        $scope.currentDraggable = null;
-        currentDroppable = null;
-        isInside = function(point, bounds) {
-          var ref, ref1;
-          return (bounds.left < (ref = point[0]) && ref < bounds.right) && (bounds.top < (ref1 = point[1]) && ref1 < bounds.bottom);
-        };
-        isIntersecting = function(r1, r2) {
-          return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
-        };
-        this.checkForIntersection = function() {
-          var dropSpot, i, len, results;
-          results = [];
-          for (i = 0, len = droppables.length; i < len; i++) {
-            dropSpot = droppables[i];
-            if (isInside($scope.currentDraggable.midPoint, dropSpot)) {
-              if (!dropSpot.isActive) {
-                this.setCurrentDroppable(dropSpot);
-                dropSpot.activate();
-                results.push(this.fireCallback('drag-enter'));
+module.directive('dragAndDrop', [
+  '$document', function($document) {
+    return {
+      restrict: 'AE',
+      scope: {
+        onItemPlaced: "&",
+        onItemRemoved: "&",
+        onDrag: "&",
+        onDragStart: "&",
+        onDragEnd: "&",
+        onDragEnter: "&",
+        onDragLeave: "&",
+        enableSwap: "=",
+        fixedPositions: "="
+      },
+      require: 'dragAndDrop',
+      controller: [
+        '$q', '$scope', function($q, $scope) {
+          var currentDroppable, draggables, droppables, isInside, isIntersecting;
+          $scope.draggables = draggables = [];
+          $scope.droppables = droppables = [];
+          $scope.isDragging = false;
+          $scope.currentDraggable = null;
+          currentDroppable = null;
+          isInside = function(point, bounds) {
+            var ref, ref1;
+            return (bounds.left < (ref = point[0]) && ref < bounds.right) && (bounds.top < (ref1 = point[1]) && ref1 < bounds.bottom);
+          };
+          isIntersecting = function(r1, r2) {
+            return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
+          };
+          this.checkForIntersection = function() {
+            var dropSpot, i, len, results;
+            results = [];
+            for (i = 0, len = droppables.length; i < len; i++) {
+              dropSpot = droppables[i];
+              if (isInside($scope.currentDraggable.midPoint, dropSpot)) {
+                if (!dropSpot.isActive) {
+                  this.setCurrentDroppable(dropSpot);
+                  dropSpot.activate();
+                  results.push(this.fireCallback('drag-enter'));
+                } else {
+                  results.push(void 0);
+                }
               } else {
-                results.push(void 0);
-              }
-            } else {
-              if (dropSpot.isActive) {
-                this.setCurrentDroppable(null);
-                dropSpot.deactivate();
-                results.push(this.fireCallback('drag-leave'));
-              } else {
-                results.push(void 0);
+                if (dropSpot.isActive) {
+                  this.setCurrentDroppable(null);
+                  dropSpot.deactivate();
+                  results.push(this.fireCallback('drag-leave'));
+                } else {
+                  results.push(void 0);
+                }
               }
             }
-          }
-          return results;
-        };
-        this.setCurrentDraggable = function(draggable) {
-          $scope.currentDraggable = draggable;
-          if (draggable) {
-            this.fireCallback('drag-start');
-          }
-          return $scope.$evalAsync(function() {
+            return results;
+          };
+          this.setCurrentDraggable = function(draggable) {
             $scope.currentDraggable = draggable;
             if (draggable) {
-              return $scope.isDragging = true;
-            } else {
-              return $scope.isDragging = false;
+              this.fireCallback('drag-start');
             }
-          });
-        };
-        this.getCurrentDraggable = function() {
-          return $scope.currentDraggable;
-        };
-        this.setCurrentDroppable = function(droppable) {
-          return currentDroppable = droppable;
-        };
-        this.getCurrentDroppable = function() {
-          return currentDroppable;
-        };
-        this.addDroppable = function(droppable) {
-          return droppables.push(droppable);
-        };
-        this.addDraggable = function(draggable) {
-          return draggables.push(draggable);
-        };
-        this.fireCallback = function(type) {
-          var state;
-          state = {
-            draggable: this.getCurrentDraggable(),
-            droppable: this.getCurrentDroppable()
+            return $scope.$evalAsync(function() {
+              $scope.currentDraggable = draggable;
+              if (draggable) {
+                return $scope.isDragging = true;
+              } else {
+                return $scope.isDragging = false;
+              }
+            });
           };
-          switch (type) {
-            case 'drag-end':
-              return typeof $scope.onDragEnd === "function" ? $scope.onDragEnd(state) : void 0;
-            case 'drag-start':
-              return typeof $scope.onDragStart === "function" ? $scope.onDragStart(state) : void 0;
-            case 'drag':
-              return typeof $scope.onDrag === "function" ? $scope.onDrag(state) : void 0;
-            case 'item-assigned':
-              return typeof $scope.onItemPlaced === "function" ? $scope.onItemPlaced(state) : void 0;
-            case 'item-removed':
-              return typeof $scope.onItemRemoved === "function" ? $scope.onItemRemoved(state) : void 0;
-            case 'drag-leave':
-              return typeof $scope.onDragLeave === "function" ? $scope.onDragLeave(state) : void 0;
-            case 'drag-enter':
-              return typeof $scope.onDragEnter === "function" ? $scope.onDragEnter(state) : void 0;
+          this.getCurrentDraggable = function() {
+            return $scope.currentDraggable;
+          };
+          this.setCurrentDroppable = function(droppable) {
+            return currentDroppable = droppable;
+          };
+          this.getCurrentDroppable = function() {
+            return currentDroppable;
+          };
+          this.addDroppable = function(droppable) {
+            return droppables.push(droppable);
+          };
+          this.addDraggable = function(draggable) {
+            return draggables.push(draggable);
+          };
+          this.fireCallback = function(type) {
+            var state;
+            state = {
+              draggable: this.getCurrentDraggable(),
+              droppable: this.getCurrentDroppable()
+            };
+            switch (type) {
+              case 'drag-end':
+                return typeof $scope.onDragEnd === "function" ? $scope.onDragEnd(state) : void 0;
+              case 'drag-start':
+                return typeof $scope.onDragStart === "function" ? $scope.onDragStart(state) : void 0;
+              case 'drag':
+                return typeof $scope.onDrag === "function" ? $scope.onDrag(state) : void 0;
+              case 'item-assigned':
+                return typeof $scope.onItemPlaced === "function" ? $scope.onItemPlaced(state) : void 0;
+              case 'item-removed':
+                return typeof $scope.onItemRemoved === "function" ? $scope.onItemRemoved(state) : void 0;
+              case 'drag-leave':
+                return typeof $scope.onDragLeave === "function" ? $scope.onDragLeave(state) : void 0;
+              case 'drag-enter':
+                return typeof $scope.onDragEnter === "function" ? $scope.onDragEnter(state) : void 0;
+            }
+          };
+        }
+      ],
+      link: function(scope, element, attrs, ngDragAndDrop) {
+        var bindEvents, moveEvents, onMove, onRelease, releaseEvents, unbindEvents;
+        moveEvents = "touchmove mousemove";
+        releaseEvents = "touchend mouseup";
+        bindEvents = function() {
+          $document.on(moveEvents, onMove);
+          return $document.on(releaseEvents, onRelease);
+        };
+        unbindEvents = function() {
+          $document.off(moveEvents, onMove);
+          return $document.off(releaseEvents, onRelease);
+        };
+        onRelease = function(e) {
+          var draggable, dropSpot;
+          draggable = ngDragAndDrop.getCurrentDraggable();
+          dropSpot = ngDragAndDrop.getCurrentDroppable();
+          if (draggable) {
+            element.addClass("drag-return");
+            setTimeout(function() {
+              return element.removeClass("drag-return");
+            }, 500);
+            ngDragAndDrop.fireCallback('drag-end');
+            draggable.deactivate();
+            if (dropSpot && !dropSpot.isFull) {
+              ngDragAndDrop.fireCallback('item-assigned');
+              draggable.assignTo(dropSpot);
+              dropSpot.itemDropped(draggable);
+            } else if (dropSpot && dropSpot.isFull && scope.enableSwap) {
+              dropSpot.items[0].returnToStartPosition();
+              dropSpot.items[0].removeFrom(dropSpot);
+              ngDragAndDrop.fireCallback('item-assigned');
+              draggable.assignTo(dropSpot);
+              dropSpot.itemDropped(draggable);
+              ngDragAndDrop.fireCallback('item-removed');
+            } else {
+              draggable.isAssigned = false;
+              if (scope.fixedPositions) {
+                draggable.returnToStartPosition();
+              }
+            }
+            if (dropSpot) {
+              dropSpot.deactivate();
+            }
+            return ngDragAndDrop.setCurrentDraggable(null);
           }
         };
-      }
-    ],
-    link: function(scope, element, attrs, ngDragAndDrop) {
-      var bindEvents, moveEvents, onMove, onRelease, releaseEvents, unbindEvents;
-      moveEvents = "touchmove mousemove";
-      releaseEvents = "touchend mouseup";
-      bindEvents = function() {
-        element.on(moveEvents, onMove);
-        return element.on(releaseEvents, onRelease);
-      };
-      unbindEvents = function() {
-        element.off(moveEvents, onMove);
-        return element.off(releaseEvents, onRelease);
-      };
-      onRelease = function(e) {
-        var draggable, dropSpot;
-        draggable = ngDragAndDrop.getCurrentDraggable();
-        dropSpot = ngDragAndDrop.getCurrentDroppable();
-        if (draggable) {
-          element.addClass("drag-return");
-          setTimeout(function() {
-            return element.removeClass("drag-return");
-          }, 500);
-          ngDragAndDrop.fireCallback('drag-end');
-          draggable.deactivate();
-          if (dropSpot && !dropSpot.isFull) {
-            ngDragAndDrop.fireCallback('item-assigned');
-            draggable.assignTo(dropSpot);
-            dropSpot.itemDropped(draggable);
-          } else if (dropSpot && dropSpot.isFull && scope.enableSwap) {
-            dropSpot.items[0].returnToStartPosition();
-            dropSpot.items[0].removeFrom(dropSpot);
-            ngDragAndDrop.fireCallback('item-assigned');
-            draggable.assignTo(dropSpot);
-            dropSpot.itemDropped(draggable);
-            ngDragAndDrop.fireCallback('item-removed');
-          } else {
-            draggable.isAssigned = false;
-            if (scope.fixedPositions) {
-              draggable.returnToStartPosition();
+        onMove = function(e) {
+          var draggable;
+          draggable = ngDragAndDrop.getCurrentDraggable();
+          if (draggable) {
+            ngDragAndDrop.fireCallback('drag');
+            if (e.touches && e.touches.length === 1) {
+              draggable.updateOffset(e.touches[0].clientX, e.touches[0].clientY);
+            } else {
+              draggable.updateOffset(e.clientX, e.clientY);
             }
+            return ngDragAndDrop.checkForIntersection();
           }
-          if (dropSpot) {
-            dropSpot.deactivate();
-          }
-          return ngDragAndDrop.setCurrentDraggable(null);
-        }
-      };
-      onMove = function(e) {
-        var draggable;
-        draggable = ngDragAndDrop.getCurrentDraggable();
-        if (draggable) {
-          ngDragAndDrop.fireCallback('drag');
-          if (e.touches && e.touches.length === 1) {
-            draggable.updateOffset(e.touches[0].clientX, e.touches[0].clientY);
-          } else {
-            draggable.updateOffset(e.clientX, e.clientY);
-          }
-          return ngDragAndDrop.checkForIntersection();
-        }
-      };
-      return bindEvents();
-    }
-  };
-});
+        };
+        return bindEvents();
+      }
+    };
+  }
+]);
 
 module.directive('dragItem', [
   '$window', '$document', function($window, $document) {
@@ -190,7 +190,9 @@ module.directive('dragItem', [
         dropTo: "@",
         dragId: "@",
         dragData: "=",
-        clone: "="
+        clone: "=",
+        lockHorizontal: "=",
+        lockVertical: "="
       },
       link: function(scope, element, attrs, ngDragAndDrop) {
         var bindEvents, cloneEl, eventOffset, height, onPress, pressEvents, setClonePosition, startPosition, transformEl, unbindEvents, updateDimensions, w, width;
@@ -222,7 +224,11 @@ module.directive('dragItem', [
           scope.right = scope.left + width;
           scope.top = scope.y + element[0].offsetTop;
           scope.bottom = scope.top + height;
-          return scope.midPoint = [scope.left + width / 2, scope.top + height / 2];
+          scope.midPoint = [scope.left + width / 2, scope.top + height / 2];
+          if (scope.lockVertical) {
+            scope.percent = 100 * (scope.left + element[0].clientWidth / 2) / element.parent()[0].clientWidth;
+            return scope.percent = Math.min(100, Math.max(0, scope.percent));
+          }
         };
         setClonePosition = function() {
           var elemRect;
@@ -238,9 +244,15 @@ module.directive('dragItem', [
             "-ms-transform": "translate(0,0)"
           });
         };
-        scope.updateOffset = function(x, y) {
-          scope.x = x - (eventOffset[0] + element[0].offsetLeft);
-          scope.y = y - (eventOffset[1] + element[0].offsetTop);
+        scope.setPercentPostion = function(xPercent, yPercent) {
+          var newX, newY;
+          newY = (element.parent()[0].clientHeight * (yPercent / 100)) - element[0].clientHeight / 2;
+          newX = (element.parent()[0].clientWidth * (xPercent / 100)) - element[0].clientWidth / 2;
+          return scope.setPosition(newX, newY);
+        };
+        scope.setPosition = function(x, y) {
+          scope.x = scope.lockHorizontal ? 0 : x;
+          scope.y = scope.lockVertical ? 0 : y;
           updateDimensions();
           return transformEl.css({
             "transform": "translate(" + scope.x + "px, " + scope.y + "px)",
@@ -248,15 +260,11 @@ module.directive('dragItem', [
             "-ms-transform": "translate(" + scope.x + "px, " + scope.y + "px)"
           });
         };
+        scope.updateOffset = function(x, y) {
+          return scope.setPosition(x - (eventOffset[0] + element[0].offsetLeft), y - (eventOffset[1] + element[0].offsetTop));
+        };
         scope.returnToStartPosition = function() {
-          scope.x = startPosition[0];
-          scope.y = startPosition[1];
-          updateDimensions();
-          return transformEl.css({
-            "transform": "translate(" + scope.x + "px, " + scope.y + "px)",
-            "-webkit-transform": "translate(" + scope.x + "px, " + scope.y + "px)",
-            "-ms-transform": "translate(" + scope.x + "px, " + scope.y + "px)"
-          });
+          return scope.setPosition(startPosition[0], startPosition[1]);
         };
         scope.assignTo = function(dropSpot) {
           scope.dropSpots.push(dropSpot);
@@ -326,6 +334,7 @@ module.directive('dragItem', [
         ngDragAndDrop.addDraggable(scope);
         bindEvents();
         scope.returnToStartPosition();
+        scope.$emit('drag-ready', scope);
         return scope.$on('$destroy', function() {
           return unbindEvents();
         });

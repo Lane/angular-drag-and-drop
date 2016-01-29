@@ -1,29 +1,11 @@
-.drag-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-.drag-container * {
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
-}
-.clone {
-  opacity: 0;
-  z-index: 0;
-}
-.drag-return drag-item {
+.drag-return drag-item,
+.drag-return .drag-item {
   -webkit-transition: all ease-in-out 0.5s;
           transition: all ease-in-out 0.5s;
 }
-.clone-active {
-  opacity: 1;
-  z-index: 9999;
-}
-drag-item {
+drag-item,
+[drag-item],
+.drag-item {
   position: relative;
   display: inline-block;
   -webkit-user-select: none;
@@ -34,7 +16,9 @@ drag-item {
   cursor: grab;
   z-index: 10;
 }
-drag-item:active {
+drag-item:active,
+[drag-item]:active,
+.drag-item:active {
   cursor: -webkit-grabbing;
   cursor: grabbing;
 }
@@ -58,4 +42,12 @@ drag-item:active {
 }
 .drag-active {
   z-index: 20;
+}
+.clone {
+  opacity: 0;
+  z-index: 0;
+}
+.clone-active {
+  opacity: 1;
+  z-index: 9999;
 }

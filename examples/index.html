@@ -11,6 +11,17 @@
       html,body { margin:0;padding:0;width:100%;height:100%;font-family: Roboto, sans-serif;}
       p { margin: 0; }
 
+
+      .drag-container {
+        position:absolute;
+        top:0;
+        left:0;
+        right:0;
+        bottom:0;
+
+      }
+      .drag-container * { user-select: none; }
+
       .drag-container {
         background:#efe;
       }
@@ -101,7 +112,7 @@
 
       <div ng-app="example">
         <div ng-controller="ExampleController">
-          <drag-and-drop
+          <div drag-and-drop class="drag-container"
             on-item-placed="logThis('item assigned', draggable, droppable)"
             on-item-removed="logThis('item removed', draggable, droppable)"
             on-drag-start="logThis('started dragging', draggable)"
@@ -114,7 +125,7 @@
                 <p>Clone</p>
             </drag-item>
 
-            <drag-item class="drag-item" drag-id="item-two" drop-to="center">
+            <drag-item class="drag-item" drag-id="item-two" drop-to="center" lock-vertical="true">
                 <p>Item Two</p>
             </drag-item>
 

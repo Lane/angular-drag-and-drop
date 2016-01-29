@@ -1,25 +1,12 @@
-.drag-container {
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  * { user-select: none; }
-}
-
-.clone {
-  opacity:0;
-  z-index:0;
-}
-.drag-return drag-item {
+// enable transitions for when items are released
+.drag-return drag-item,
+.drag-return .drag-item  {
   transition: all ease-in-out 0.5s;
 }
-.clone-active {
-  opacity:1;
-  z-index:9999;
-}
-
-drag-item {
+// drag item base styling
+drag-item,
+[drag-item],
+.drag-item {
   position:relative;
   display:inline-block;
   user-select: none;
@@ -43,4 +30,13 @@ drag-item {
   .drag-content {
     //transform: scale(1.15);
   }
+}
+
+.clone {
+  opacity:0;
+  z-index:0;
+}
+.clone-active {
+  opacity:1;
+  z-index:9999;
 }
