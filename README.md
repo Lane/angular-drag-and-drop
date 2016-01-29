@@ -45,6 +45,7 @@ The following callback functions can be added to the `drag-and-drop` directive.
   - `x`: the x offset of the drag item
   - `y`: the y offset of the drag item
   - `clone` : a clone item is dragged instead of the original item
+  - `lock-vertical`: locks the item so it may only be moved left and right
 
 #### `drop-spot`
   - `drop-id`: an identifier that is used for this drop item.  When set, the `drop-spot` element will have a class that matches the `drag-id`.
