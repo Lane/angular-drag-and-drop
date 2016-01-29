@@ -26,32 +26,31 @@ Customizable drag and drop behaviour for Angular.
 
 ## Customizing
 
-### Options
+### Directive Attributes
+You can pass various functions and options to the directive by assigning the following attributes:
 
-#### `drag-and-drop`
-The following callback functions can be added to the `drag-and-drop` directive.
+#### `drag-and-drop` - element or attribute
+  - `on-drag-start`: function - fired when an item starts being dragged
+  - `on-drag-end`: function - fired when an item is released
+  - `on-drag-enter`: function - fired when an item is dragged over a drop spot
+  - `on-drag-leave`: function - fired when an item is dragged outside of a drop spot
+  - `on-item-placed`: function - fired when an item is dropped inside of a drop spot
+  - `on-item-removed`: function - fired when and item is removed from its drop spot
+  - `enable-swap`: boolean - an item will be swapped out when dropping a drag item on to a drop spot that has reached its maximum number of items
+  - `fixed-positions`: boolean - when set to true, items return to their start positions when dropped outside of a drop spot
 
-  - `on-drag-start`: fired when an item starts being dragged
-  - `on-drag-end`: fired when an item is released
-  - `on-drag-enter`: fired when an item is dragged over a drop spot
-  - `on-drag-leave`: fired when an item is dragged outside of a drop spot
-  - `on-item-placed`: fired when an item is dropped inside of a drop spot
-  - `on-item-removed`: fired when and item is removed from its drop spot
-  - `enable-swap`: when set to true, an item will be swapped out when dropping a drag item on to a drop spot that has reached its maximum number of items
-  - `fixed-positions`: when set to true, items remain in their start positions when not placed inside of a drop spot
-
-#### `drag-item`
+#### `drag-item` - element or attribute
   - `drag-id`: an identifier that is used for this drag item.  When set, the `drag-item` element will have a class that matches the `drag-id`.
-  - `drag-data`: use to associate any additional data you may want for the draggable item.
-  - `drop-to`: used to position the element within the drop spot.
-  - `x`: the x offset of the drag item
-  - `y`: the y offset of the drag item
-  - `clone` : a clone item is dragged instead of the original item
-  - `lock-vertical`: locks the item so it may only be moved left and right
+  - `drag-data`: object - use to associate any additional data you may want for the draggable item.
+  - `drop-to`: string - used to position the element within the drop spot (e.g. "top", or "bottom left")
+  - `x`: int - the pixel x offset of the drag item from it's original position
+  - `y`: int - the pixel y offset of the drag item from it's original position
+  - `clone` : boolean - a clone item is dragged instead of the original item
+  - `lock-vertical`: boolean - locks the item so it may only be moved left and right
 
-#### `drop-spot`
-  - `drop-id`: an identifier that is used for this drop item.  When set, the `drop-spot` element will have a class that matches the `drag-id`.
-  - `max-items`: Used to specify the maximum number of items allowed in this drop spot
+#### `drop-spot` - element or attribute
+  - `drop-id`:  string - an identifier that is used for this drop item.  When set, the `drop-spot` element will have a class that matches the `drag-id`.
+  - `max-items`: int - Used to specify the maximum number of items allowed in this drop spot
 
 ### Classes
   The following classes are added to elements to allow styling based on the current state of the drag and drop.
