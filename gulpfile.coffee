@@ -5,6 +5,7 @@ concat            = require 'gulp-concat'
 less              = require 'gulp-less'
 autoprefixer      = require 'gulp-autoprefixer'
 gutil             = require 'gulp-util'
+uglify          = require 'gulp-uglify'
 browserSync       = require 'browser-sync'
 
 config =
@@ -39,6 +40,9 @@ gulp.task "coffee", ->
   gulp.src config.source.coffee
     .pipe coffee bare: true
     .pipe concat "angular-drag-and-drop.js"
+    .pipe gulp.dest "#{config.target}/js"
+    .pipe uglify()
+    .pipe concat "angular-drag-and-drop.min.js"
     .pipe gulp.dest "#{config.target}/js"
 
 gulp.task "watch", ->

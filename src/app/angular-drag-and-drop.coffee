@@ -235,12 +235,12 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
     setClonePosition = ->
       elemRect = element[0].getBoundingClientRect()
       transformEl.css
-        position: "absolute"
-        top: elemRect.top+"px"
-        left: elemRect.left+"px"
-        bottom: "auto"
-        right: "auto"
-        transform: "translate(0,0)"
+        "position": "absolute"
+        "top": elemRect.top+"px"
+        "left": elemRect.left+"px"
+        "bottom": "auto"
+        "right": "auto"
+        "transform": "translate(0,0)"
         "-webkit-transform": "translate(0,0)"
         "-ms-transform": "translate(0,0)"
 
@@ -336,8 +336,8 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
         eventOffset = [e.offsetX, e.offsetY]
       ngDragAndDrop.checkForIntersection()
       dropSpot = ngDragAndDrop.getCurrentDroppable()
-      if dropSpot
-        scope.removeFrom dropSpot
+      for spot in scope.dropSpots
+        scope.removeFrom spot
         ngDragAndDrop.fireCallback 'item-removed'
       e.preventDefault()
 
@@ -358,7 +358,7 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
 
 # Drop Directive
 # ----------
-module.directive 'dropSpot', ($window) ->
+module.directive 'dropSpot', [ '$window', ($window) ->
   restrict: 'AE'
   require: '^dragAndDrop'
   transclude: true
@@ -484,3 +484,5 @@ module.directive 'dropSpot', ($window) ->
     scope.isActive = false
     scope.items = []
     ngDragAndDrop.addDroppable scope
+
+]
