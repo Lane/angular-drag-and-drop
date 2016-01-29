@@ -1,8 +1,8 @@
 {
   "name": "angular-drag-and-drop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "drag and drop functionality in angular",
-  "main": "index.js",
+  "main": "build/js/angular-drag-and-drop.js",
   "directories": {
     "example": "examples"
   },
@@ -34,9 +34,7 @@
     "gulp-less": "^3.0.3",
     "gulp-plumber": "^1.0.1",
     "gulp-util": "^3.0.6",
-    "gulp-watch": "^4.3.5"
-  },
-  "devDependencies": {
+    "gulp-watch": "^4.3.5",
     "gulp-uglify": "^1.5.1"
   }
 }
