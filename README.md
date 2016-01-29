@@ -1,6 +1,8 @@
 # Angular Drag and Drop
 Customizable drag and drop behaviour for Angular.
 
+### [Demo](http://lane.github.io/angular-drag-and-drop/)
+
 ## Getting Started
 
   1. Add `angular-drag-and-drop.js`

@@ -8,31 +8,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="./build/css/drag-and-drop.css">
     <script>
-    if (typeof console.log == "object" && Function.prototype.bind && console) {
-        ["log","info","warn","error","assert","dir","clear","profile","profileEnd"]
-            .forEach(function (method) {
-                console[method] = this.call(console[method], console);
-            }, Function.prototype.bind);
-    } else {
-      console = {
-        log: function() {}
-      }
-    }
+    // console fix
+    if("undefined"===typeof console){var console={};console.log=console.error=console.info=console.debug=console.warn=console.trace=console.dir=console.dirxml=console.group=console.groupEnd=console.time=console.timeEnd=console.assert=console.profile=function(){}};
     </script>
     <style>
       html,body { margin:0;padding:0;width:100%;height:100%;font-family: Roboto, sans-serif; overflow:hidden;}
       p { margin: 0; }
-
-
+      * {
+        -ms-user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
       .drag-container {
         position:absolute;
         top:0;
         left:0;
         right:0;
         bottom:0;
-
       }
-      .drag-container * { user-select: none; }
 
       .drag-container {
         background:#efe;
@@ -141,7 +135,7 @@
                 <p>Vertical postion locked</p>
             </drag-item>
 
-            <drag-item class="drag-item" drag-id="item-three" drop-to="center">
+            <drag-item class="drag-item" drag-id="item-three">
                 <p>Item Three</p>
             </drag-item>
 
@@ -158,7 +152,7 @@
       </div>
 
       <script type="text/javascript" src="vendor/angular/angular.min.js"></script>
-      <script type="text/javascript" src="./build/js/angular-drag-and-drop.js"></script>
+      <script type="text/javascript" src="./build/js/angular-drag-and-drop.min.js"></script>
       <script type="text/javascript" src="js/sample-app.js"></script>
     </body>
 </html>
