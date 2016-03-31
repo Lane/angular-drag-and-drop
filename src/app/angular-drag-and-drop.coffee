@@ -340,6 +340,7 @@ module.directive 'dragItem', ['$window', '$document', ($window, $document) ->
         scope.removeFrom spot
         ngDragAndDrop.fireCallback 'item-removed'
       e.preventDefault()
+      e.stopPropagation()
 
     # initialization
     pressEvents = "touchstart mousedown"
