@@ -8,7 +8,7 @@ drag-item,
 [drag-item],
 .drag-item {
   position:relative;
-  display:inline-block;
+  // display:inline-block;
   user-select: none;
   cursor:grab;
   z-index:10;
@@ -16,11 +16,11 @@ drag-item,
     cursor:grabbing;
   }
 }
-.drag-transform {
-  transition: transform 0.25s ease-out;
-  transform-origin: center center;
-  &.drag-active { transition: transform 0.25s cubic-bezier(0,.5,0,1); }
-}
+// .drag-transform {
+//   transition: transform 0.25s ease-out;
+//   transform-origin: center center;
+//   &.drag-active { transition: transform 0.25s cubic-bezier(0,.5,0,1); }
+// }
 .drag-content {
   transform: scale(1);
   transition: all 0.1s ease-in-out;

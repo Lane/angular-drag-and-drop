@@ -7,7 +7,6 @@ drag-item,
 [drag-item],
 .drag-item {
   position: relative;
-  display: inline-block;
   -webkit-user-select: none;
      -moz-user-select: none;
       -ms-user-select: none;
@@ -21,17 +20,6 @@ drag-item:active,
 .drag-item:active {
   cursor: -webkit-grabbing;
   cursor: grabbing;
-}
-.drag-transform {
-  -webkit-transition: -webkit-transform 0.25s ease-out;
-          transition: transform 0.25s ease-out;
-  -webkit-transform-origin: center center;
-      -ms-transform-origin: center center;
-          transform-origin: center center;
-}
-.drag-transform.drag-active {
-  -webkit-transition: -webkit-transform 0.25s cubic-bezier(0, 0.5, 0, 1);
-          transition: transform 0.25s cubic-bezier(0, 0.5, 0, 1);
 }
 .drag-content {
   -webkit-transform: scale(1);
