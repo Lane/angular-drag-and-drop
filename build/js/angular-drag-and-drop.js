@@ -215,7 +215,8 @@ module.directive('dragAndDrop', [
           if (draggable) {
             ngDragAndDrop.fireCallback('drag', e);
             if (e.touches && e.touches.length === 1) {
-              draggable.updateOffset(e.touches[0].clientX, e.touches[0].clientY);
+              draggable.updateOffset(e.touches[0].clientX ? e.touches[0].clientX : e.touches[0].pageX,
+                                     e.touches[0].clientY ? e.touches[0].clientY : e.touches[0].pageY);
             } else {
               draggable.updateOffset(e.clientX, e.clientY);
             }
