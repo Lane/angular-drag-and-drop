@@ -1,4 +1,4 @@
-# Support to mobile and desktop
+# ** Support to mobile and desktop **
 
 # Angular Drag and Drop
 Customizable drag and drop behaviour for Angular.
